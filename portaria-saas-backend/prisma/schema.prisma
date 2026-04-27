@@ -1,0 +1,251 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TipoPessoa {
+  MORADOR
+  FUNCIONARIO
+  TERCEIRO
+  PRESTADOR
+  VISITANTE
+  SINDICO
+  ADMINISTRADOR
+}
+
+enum TipoEmpresa {
+  TERCEIRIZADA
+  PRESTADORA
+  FORNECEDOR
+}
+
+enum PerfilUsuario {
+  SUPER_ADMIN
+  ADMIN_CONDOMINIO
+  PORTARIA
+  TECNICO
+  MORADOR
+}
+
+enum TipoCredencial {
+  FACIAL
+  TAG
+  SENHA
+}
+
+enum TipoAcesso {
+  FACIAL
+  TAG
+  SENHA
+  VISITANTE_IA
+  VISITANTE_MANUAL
+}
+
+enum StatusAcesso {
+  AUTORIZADO
+  NEGADO
+  PENDENTE
+}
+
+model Pessoa {
+  id             Int        @id @default(autoincrement())
+  condominioId   Int
+  empresaId      Int?
+  nome           String
+  documento      String?
+  telefone       String?
+  email          String?
+  tipo           TipoPessoa
+  rg             String?
+  funcao         String?
+  observacao     String?
+  validadeInicio DateTime?
+  validadeFim    DateTime?
+  ativo          Boolean    @default(true)
+  criadoEm       DateTime   @default(now())
+
+  condominio Condominio       @relation(fields: [condominioId], references: [id])
+  empresa    EmpresaTerceira? @relation(fields: [empresaId], references: [id])
+
+  unidades    PessoaUnidade[]
+  credenciais CredencialAcesso[]
+  acessos     EventoAcesso[]
+}
+
+model PessoaUnidade {
+  id        Int      @id @default(autoincrement())
+  pessoaId  Int
+  unidadeId Int
+  relacao   String?
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+
+  pessoa  Pessoa  @relation(fields: [pessoaId], references: [id])
+  unidade Unidade @relation(fields: [unidadeId], references: [id])
+
+  @@unique([pessoaId, unidadeId])
+}
+
+model EmpresaTerceira {
+  id           Int         @id @default(autoincrement())
+  condominioId Int
+  nome         String
+  documento    String?
+  telefone     String?
+  email        String?
+  tipo         TipoEmpresa
+  ativo        Boolean     @default(true)
+  criadoEm     DateTime    @default(now())
+
+  condominio Condominio @relation(fields: [condominioId], references: [id])
+  pessoas    Pessoa[]
+}
+
+model Condominio {
+  id          Int      @id @default(autoincrement())
+  nome        String
+  documento   String?
+  telefone    String?
+  email       String?
+  responsavel String?
+  cep         String?
+  endereco    String?
+  numero      String?
+  bairro      String?
+  cidade      String?
+  estado      String?
+  ativo       Boolean  @default(true)
+  criadoEm    DateTime @default(now())
+
+  usuarios          Usuario[]
+  unidades          Unidade[]
+  moradores         Morador[]
+  dispositivos      Dispositivo[]
+  visitantes        Visitante[]
+  visitas           Visita[]
+  acessos           EventoAcesso[]
+  pessoas           Pessoa[]
+  empresasTerceiras EmpresaTerceira[]
+}
+
+model Usuario {
+  id           Int           @id @default(autoincrement())
+  condominioId Int?
+  nome         String
+  email        String        @unique
+  senhaHash    String
+  perfil       PerfilUsuario
+  ativo        Boolean       @default(true)
+  criadoEm     DateTime      @default(now())
+
+  condominio Condominio? @relation(fields: [condominioId], references: [id])
+}
+
+model Unidade {
+  id            Int     @id @default(autoincrement())
+  condominioId  Int
+  identificacao String
+  bloco         String?
+  ativo         Boolean @default(true)
+
+  condominio Condominio      @relation(fields: [condominioId], references: [id])
+  moradores  Morador[]
+  pessoas    PessoaUnidade[]
+}
+
+model Morador {
+  id           Int      @id @default(autoincrement())
+  condominioId Int
+  unidadeId    Int
+  nome         String
+  telefone     String?
+  email        String?
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now())
+
+  condominio Condominio @relation(fields: [condominioId], references: [id])
+  unidade    Unidade    @relation(fields: [unidadeId], references: [id])
+
+  credenciais CredencialAcesso[]
+  acessos     EventoAcesso[]
+}
+
+model CredencialAcesso {
+  id            Int            @id @default(autoincrement())
+  condominioId  Int
+  moradorId     Int
+  pessoaId      Int?
+  tipo          TipoCredencial
+  identificador String
+  ativo         Boolean        @default(true)
+  criadoEm      DateTime       @default(now())
+
+  morador Morador @relation(fields: [moradorId], references: [id])
+  pessoa  Pessoa? @relation(fields: [pessoaId], references: [id])
+
+  @@unique([condominioId, tipo, identificador])
+}
+
+model Dispositivo {
+  id           Int     @id @default(autoincrement())
+  condominioId Int
+  nome         String
+  tipo         String
+  ip           String?
+  localizacao  String?
+  ativo        Boolean @default(true)
+
+  condominio Condominio     @relation(fields: [condominioId], references: [id])
+  acessos    EventoAcesso[]
+}
+
+model Visitante {
+  id           Int      @id @default(autoincrement())
+  condominioId Int
+  nome         String
+  documento    String?
+  telefone     String?
+  criadoEm     DateTime @default(now())
+
+  condominio Condominio @relation(fields: [condominioId], references: [id])
+  visitas    Visita[]
+}
+
+model Visita {
+  id            Int          @id @default(autoincrement())
+  condominioId  Int
+  visitanteId   Int?
+  unidadeId     Int?
+  moradorId     Int?
+  nomeVisitante String
+  motivo        String?
+  status        StatusAcesso @default(PENDENTE)
+  criadoEm      DateTime     @default(now())
+  autorizadoEm  DateTime?
+
+  condominio Condominio @relation(fields: [condominioId], references: [id])
+  visitante  Visitante? @relation(fields: [visitanteId], references: [id])
+}
+
+model EventoAcesso {
+  id            Int          @id @default(autoincrement())
+  condominioId  Int
+  moradorId     Int?
+  pessoaId      Int?
+  dispositivoId Int?
+  tipo          TipoAcesso
+  origem        String?
+  nome          String?
+  unidade       String?
+  status        StatusAcesso
+  criadoEm      DateTime     @default(now())
+
+  condominio  Condominio   @relation(fields: [condominioId], references: [id])
+  morador     Morador?     @relation(fields: [moradorId], references: [id])
+  pessoa      Pessoa?      @relation(fields: [pessoaId], references: [id])
+  dispositivo Dispositivo? @relation(fields: [dispositivoId], references: [id])
+}
