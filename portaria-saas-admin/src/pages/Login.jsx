@@ -9,7 +9,7 @@ export default function Login() {
   async function handleLogin(e) {
     e.preventDefault();
 
-    const res = await fetch("http://10.0.0.104:4000/auth/login", {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

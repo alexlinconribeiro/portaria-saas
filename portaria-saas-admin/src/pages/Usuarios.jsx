@@ -164,16 +164,16 @@ export default function Usuarios() {
         }
         onClose={fecharModal}
         footer={
-          <>
-            <button className="primary-btn" onClick={salvar}>
-              {editandoId ? "Salvar alterações" : "Criar usuário"}
-            </button>
-
-            <button className="secondary-btn" onClick={fecharModal}>
-              Cancelar
-            </button>
-          </>
-        }
+			<>
+				<button className="primary-btn" onClick={salvar}>
+				{editandoId ? "Salvar alterações" : "Salvar dispositivo"}
+				</button>
+			
+				<button className="secondary-btn" onClick={() => setModal(false)}>
+				Cancelar
+				</button>
+			</>
+			}
       >
         <div className="form-grid">
           <label className="field">

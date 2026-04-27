@@ -191,13 +191,21 @@ model CredencialAcesso {
 }
 
 model Dispositivo {
-  id           Int     @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   condominioId Int
   nome         String
   tipo         String
+  fabricante   String?
+  modelo       String?
   ip           String?
+  porta        Int?
+  usuario      String?
+  senha        String?
   localizacao  String?
-  ativo        Boolean @default(true)
+  status       String?   @default("DESCONHECIDO")
+  ultimoCheck  DateTime?
+  config       Json?
+  ativo        Boolean   @default(true)
 
   condominio Condominio     @relation(fields: [condominioId], references: [id])
   acessos    EventoAcesso[]

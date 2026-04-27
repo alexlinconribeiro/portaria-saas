@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+const dispositivosRoutes = require("./routes/dispositivos.routes");
 const pessoasRoutes = require("./routes/pessoas.routes");
 const portaoRoutes = require("./routes/portao.routes");
 const eventosRoutes = require("./routes/eventos.routes");
@@ -13,6 +14,7 @@ const authRoutes = require("./routes/auth.routes");
 const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
+
 
 const app = express();
 const prisma = new PrismaClient();
@@ -30,7 +32,7 @@ app.use("/credenciais", credenciaisRoutes);
 app.use("/eventos", eventosRoutes);
 app.use("/portao", portaoRoutes);
 app.use("/pessoas", pessoasRoutes);
-
+app.use("/dispositivos", dispositivosRoutes);
 app.get("/protegido", authMiddleware, (req, res) => {
   res.json({
     mensagem: "Você está autenticado",

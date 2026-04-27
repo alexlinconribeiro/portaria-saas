@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Logs from "./pages/Logs";
 import Pessoas from "./pages/Pessoas";
 import Credenciais from "./pages/Credenciais";
+import Dispositivos from "./pages/Dispositivos";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
 	<Route path="/moradores" element={<Moradores />} />
 	<Route path="/pessoas" element={<Pessoas />} />
 	<Route path="/credenciais" element={<Credenciais />} />
+	<Route path="/dispositivos" element={<Dispositivos />} />
       </Routes>
     </BrowserRouter>
   );
