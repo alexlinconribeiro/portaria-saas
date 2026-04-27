@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: portaria_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: portaria
+      POSTGRES_PASSWORD: portaria123
+      POSTGRES_DB: portaria_saas
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./portaria-saas-backend
+    container_name: portaria_backend
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://portaria:portaria123@postgres:5432/portaria_saas
+      JWT_SECRET: troque_essa_chave
+      PORT: 4000
+    ports:
+      - "4000:4000"
+
+  frontend:
+    build:
+      context: ./portaria-saas-admin
+      args:
+        VITE_API_URL: http://localhost:4000
+    container_name: portaria_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres_data:
