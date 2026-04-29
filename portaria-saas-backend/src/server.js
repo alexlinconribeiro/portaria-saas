@@ -1,5 +1,8 @@
 require("dotenv").config();
 
+const perfilRoutes = require("./routes/perfil.routes");
+const configuracoesRoutes = require("./routes/configuracoes.routes");
+const visitantesRoutes = require("./routes/visitantes.routes");
 const dispositivosRoutes = require("./routes/dispositivos.routes");
 const pessoasRoutes = require("./routes/pessoas.routes");
 const portaoRoutes = require("./routes/portao.routes");
@@ -33,6 +36,9 @@ app.use("/eventos", eventosRoutes);
 app.use("/portao", portaoRoutes);
 app.use("/pessoas", pessoasRoutes);
 app.use("/dispositivos", dispositivosRoutes);
+app.use("/visitantes", visitantesRoutes);
+app.use("/configuracoes", configuracoesRoutes);
+app.use("/perfil", perfilRoutes);
 app.get("/protegido", authMiddleware, (req, res) => {
   res.json({
     mensagem: "Você está autenticado",

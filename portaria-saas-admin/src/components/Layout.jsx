@@ -3,9 +3,15 @@ import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 
 export default function Layout({ title, description, active, children, action }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+  return localStorage.getItem("sidebarCollapsed") === "true";
+});
   const [menuMobile, setMenuMobile] = useState(false);
-
+function alternarSidebar() {
+  const novoValor = !collapsed;
+  setCollapsed(novoValor);
+  localStorage.setItem("sidebarCollapsed", String(novoValor));
+}
   return (
     <div className="app-layout">
       {menuMobile && (
@@ -19,7 +25,7 @@ export default function Layout({ title, description, active, children, action })
         <Sidebar
           active={active}
           collapsed={collapsed}
-          onToggle={() => setCollapsed(!collapsed)}
+          onToggle={alternarSidebar}
         />
       </div>
 

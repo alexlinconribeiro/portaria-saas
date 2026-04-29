@@ -17,17 +17,29 @@ const vazio = {
 
 export default function Dispositivos() {
   const [dispositivos, setDispositivos] = useState([]);
+  const [condominios, setCondominios] = useState([]);
   const [form, setForm] = useState(vazio);
   const [modal, setModal] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
+  const [condominioFiltro, setCondominioFiltro] = useState("1");
+  const [testandoTodos, setTestandoTodos] = useState(false);
 
-  async function carregar() {
-    const data = await apiFetch("/dispositivos?condominioId=1");
+  async function carregar(id = condominioFiltro) {
+    const conds = await apiFetch("/condominios");
+    setCondominios(Array.isArray(conds) ? conds : []);
+
+    const data = await apiFetch(`/dispositivos?condominioId=${id}`);
     setDispositivos(Array.isArray(data) ? data : []);
   }
 
   function atualizar(campo, valor) {
     setForm((f) => ({ ...f, [campo]: valor }));
+  }
+
+  function abrirNovo() {
+    setEditandoId(null);
+    setForm({ ...vazio, condominioId: condominioFiltro });
+    setModal(true);
   }
 
   function editar(d) {
@@ -40,14 +52,20 @@ export default function Dispositivos() {
       ip: d.ip || "",
       porta: String(d.porta || 80),
       localizacao: d.localizacao || "",
-      condominioId: String(d.condominioId || 1)
+      condominioId: String(d.condominioId || condominioFiltro)
     });
     setModal(true);
   }
 
+  function fecharModal() {
+    setModal(false);
+    setEditandoId(null);
+    setForm(vazio);
+  }
+
   async function salvar() {
-    if (!form.nome || !form.modelo || !form.ip) {
-      alert("Nome, modelo e IP são obrigatórios");
+    if (!form.nome || !form.fabricante || !form.modelo || !form.ip) {
+      alert("Nome, fabricante, modelo e IP são obrigatórios");
       return;
     }
 
@@ -69,17 +87,48 @@ export default function Dispositivos() {
       });
     }
 
-    setModal(false);
-    setEditandoId(null);
-    setForm(vazio);
-    carregar();
+    fecharModal();
+    carregar(form.condominioId);
   }
 
   async function testar(id) {
     await apiFetch(`/dispositivos/${id}/check`, {
       method: "POST"
     });
-    carregar();
+
+    carregar(condominioFiltro);
+  }
+
+  async function testarTodos() {
+    setTestandoTodos(true);
+
+    for (const d of dispositivos) {
+      await apiFetch(`/dispositivos/${d.id}/check`, {
+        method: "POST"
+      });
+    }
+
+    await carregar(condominioFiltro);
+    setTestandoTodos(false);
+  }
+
+  function statusLabel(status) {
+    if (status === "ONLINE") return "ONLINE";
+    if (status === "OFFLINE") return "OFFLINE";
+    return "DESCONHECIDO";
+  }
+
+  function modelosPorFabricante() {
+    if (form.fabricante === "HIKVISION") {
+      return [{ label: "DS-K1T673", value: "DS-K1T673" }];
+    }
+
+    return [
+      { label: "SS 3530 MF FACE", value: "SS 3530 MF FACE" },
+      { label: "SS 3530 MF FACE W", value: "SS 3530 MF FACE W" },
+      { label: "SS 3540 MF FACE EX", value: "SS 3540 MF FACE EX" },
+      { label: "SS 7530 FACE", value: "SS 7530 FACE" }
+    ];
   }
 
   useEffect(() => {
@@ -89,22 +138,39 @@ export default function Dispositivos() {
   return (
     <Layout
       title="Dispositivos"
-      description="Gerencie leitores faciais e equipamentos da portaria."
+      description="Gerencie leitores faciais, controladoras e equipamentos da portaria."
       active="/dispositivos"
       action={
-        <button
-          className="primary-btn"
-          onClick={() => {
-            setEditandoId(null);
-            setForm(vazio);
-            setModal(true);
-          }}
-        >
+        <button className="primary-btn" onClick={abrirNovo}>
           + Adicionar dispositivo
         </button>
       }
     >
       <section className="panel">
+        <h2>Filtro</h2>
+
+        <div className="filters">
+          <Dropdown
+            searchable
+            placeholder="Condomínio"
+            value={condominioFiltro}
+            onChange={(val) => {
+              setCondominioFiltro(val);
+              carregar(val);
+            }}
+            options={condominios.map((c) => ({
+              label: c.nome,
+              value: String(c.id)
+            }))}
+          />
+
+          <button onClick={testarTodos} disabled={testandoTodos || dispositivos.length === 0}>
+            {testandoTodos ? "Testando..." : "Testar todos"}
+          </button>
+        </div>
+      </section>
+
+      <section className="panel logs-panel">
         <h2>Dispositivos cadastrados</h2>
 
         {dispositivos.length === 0 ? (
@@ -115,9 +181,11 @@ export default function Dispositivos() {
               <tr>
                 <th>Status</th>
                 <th>Nome</th>
+                <th>Fabricante</th>
                 <th>Modelo</th>
-                <th>IP</th>
+                <th>IP:Porta</th>
                 <th>Local</th>
+                <th>Último check</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -126,13 +194,22 @@ export default function Dispositivos() {
               {dispositivos.map((d) => (
                 <tr key={d.id}>
                   <td>
-                    <span className={`status-dot ${d.status?.toLowerCase() || "desconhecido"}`} />
+                    <span className={`status-badge ${d.status?.toLowerCase() || "desconhecido"}`}>
+                      <span className={`status-dot ${d.status?.toLowerCase() || "desconhecido"}`} />
+                      {statusLabel(d.status)}
+                    </span>
                   </td>
 
                   <td>{d.nome}</td>
+                  <td>{d.fabricante || "-"}</td>
                   <td>{d.modelo || "-"}</td>
                   <td>{d.ip ? `${d.ip}:${d.porta || 80}` : "-"}</td>
                   <td>{d.localizacao || "-"}</td>
+                  <td>
+                    {d.ultimoCheck
+                      ? new Date(d.ultimoCheck).toLocaleString("pt-BR")
+                      : "-"}
+                  </td>
 
                   <td>
                     <button className="table-btn" onClick={() => testar(d.id)}>
@@ -157,20 +234,34 @@ export default function Dispositivos() {
         aberto={modal}
         titulo={editandoId ? "Editar dispositivo" : "Novo dispositivo"}
         descricao="Cadastre leitores faciais e equipamentos da portaria."
-        onClose={() => setModal(false)}
+        onClose={fecharModal}
         footer={
           <>
             <button className="primary-btn" onClick={salvar}>
               {editandoId ? "Salvar alterações" : "Salvar dispositivo"}
             </button>
 
-            <button className="secondary-btn" onClick={() => setModal(false)}>
+            <button className="secondary-btn" onClick={fecharModal}>
               Cancelar
             </button>
           </>
         }
       >
         <div className="form-grid">
+          <label className="field">
+            <span>Condomínio</span>
+            <Dropdown
+              searchable
+              placeholder="Condomínio"
+              value={form.condominioId}
+              onChange={(v) => atualizar("condominioId", v)}
+              options={condominios.map((c) => ({
+                label: c.nome,
+                value: String(c.id)
+              }))}
+            />
+          </label>
+
           <label className="field">
             <span>Nome do dispositivo</span>
             <input
@@ -201,16 +292,25 @@ export default function Dispositivos() {
               placeholder="Selecione o modelo"
               value={form.modelo}
               onChange={(v) => atualizar("modelo", v)}
-              options={
-                form.fabricante === "HIKVISION"
-                  ? [{ label: "DS-K1T673", value: "DS-K1T673" }]
-                  : [
-                      { label: "SS 3530 MF FACE", value: "SS 3530 MF FACE" },
-                      { label: "SS 3530 MF FACE W", value: "SS 3530 MF FACE W" },
-                      { label: "SS 3540 MF FACE EX", value: "SS 3540 MF FACE EX" },
-                      { label: "SS 7530 FACE", value: "SS 7530 FACE" }
-                    ]
-              }
+              options={modelosPorFabricante()}
+            />
+          </label>
+
+          <label className="field">
+            <span>Tipo</span>
+            <Dropdown
+              value={form.tipo}
+              onChange={(v) => atualizar("tipo", v)}
+              options={[
+                { label: "Leitor facial", value: "LEITOR_FACIAL" },
+                { label: "Controladora", value: "CONTROLADORA" },
+                { label: "Portão", value: "PORTAO" },
+                { label: "Cancela", value: "CANCELA" },
+                { label: "Interfone", value: "INTERFONE" },
+                { label: "PBX", value: "PBX" },
+                { label: "Câmera", value: "CAMERA" },
+                { label: "Outro", value: "OUTRO" }
+              ]}
             />
           </label>
 
@@ -235,7 +335,7 @@ export default function Dispositivos() {
           <label className="field">
             <span>Localização</span>
             <input
-              placeholder="Ex: Portaria"
+              placeholder="Ex: Portaria principal"
               value={form.localizacao}
               onChange={(e) => atualizar("localizacao", e.target.value)}
             />

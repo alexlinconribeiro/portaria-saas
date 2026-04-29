@@ -50,6 +50,31 @@ enum StatusAcesso {
   NEGADO
   PENDENTE
 }
+enum StatusVisita {
+  PENDENTE
+  AUTORIZADO
+  NEGADO
+  EM_ANDAMENTO
+  FINALIZADO
+  CANCELADO
+}
+
+enum TipoVisita {
+  AVULSA
+  AGENDADA
+  PRESTADOR
+  ENTREGA
+}
+enum TipoAcionamentoPortao {
+  SIMULADO
+  HTTP
+  RELE
+  API
+}
+enum TemaUsuario {
+  ESCURO
+  CLARO
+}
 
 model Pessoa {
   id             Int        @id @default(autoincrement())
@@ -74,6 +99,8 @@ model Pessoa {
   unidades    PessoaUnidade[]
   credenciais CredencialAcesso[]
   acessos     EventoAcesso[]
+  visitasResponsavel Visita[] @relation("PessoaResponsavelVisita")
+  visitasAutorizadasComoPessoa Visita[] @relation("PessoaAutorizouVisita")
 }
 
 model PessoaUnidade {
@@ -130,6 +157,7 @@ model Condominio {
   acessos           EventoAcesso[]
   pessoas           Pessoa[]
   empresasTerceiras EmpresaTerceira[]
+  configuracao Configuracao?
 }
 
 model Usuario {
@@ -139,10 +167,12 @@ model Usuario {
   email        String        @unique
   senhaHash    String
   perfil       PerfilUsuario
+  tema TemaUsuario @default(ESCURO)
   ativo        Boolean       @default(true)
   criadoEm     DateTime      @default(now())
 
   condominio Condominio? @relation(fields: [condominioId], references: [id])
+  visitasAutorizadas Visita[]
 }
 
 model Unidade {
@@ -155,6 +185,7 @@ model Unidade {
   condominio Condominio      @relation(fields: [condominioId], references: [id])
   moradores  Morador[]
   pessoas    PessoaUnidade[]
+  visitas    Visita[]
 }
 
 model Morador {
@@ -209,6 +240,7 @@ model Dispositivo {
 
   condominio Condominio     @relation(fields: [condominioId], references: [id])
   acessos    EventoAcesso[]
+  visitas    Visita[]
 }
 
 model Visitante {
@@ -224,21 +256,42 @@ model Visitante {
 }
 
 model Visita {
-  id            Int          @id @default(autoincrement())
-  condominioId  Int
-  visitanteId   Int?
-  unidadeId     Int?
-  moradorId     Int?
-  nomeVisitante String
-  motivo        String?
-  status        StatusAcesso @default(PENDENTE)
-  criadoEm      DateTime     @default(now())
-  autorizadoEm  DateTime?
+  id              Int          @id @default(autoincrement())
+  condominioId    Int
+  visitanteId     Int?
+  unidadeId       Int?
+  pessoaResponsavelId Int?
+  autorizadoPorPessoaId Int?
+  dispositivoId   Int?
+  autorizadoPorId Int?
 
-  condominio Condominio @relation(fields: [condominioId], references: [id])
-  visitante  Visitante? @relation(fields: [visitanteId], references: [id])
+  nomeVisitante   String
+  documento       String?
+  telefone        String?
+  motivo          String?
+  observacao      String?
+
+  tipo            TipoVisita   @default(AVULSA)
+  status          StatusVisita @default(PENDENTE)
+
+  dataPrevista    DateTime?
+  entradaEm       DateTime?
+  saidaEm         DateTime?
+  autorizadoEm    DateTime?
+  negadoEm        DateTime?
+  canceladoEm     DateTime?
+
+  criadoEm        DateTime     @default(now())
+  atualizadoEm    DateTime     @updatedAt
+
+  condominio      Condominio   @relation(fields: [condominioId], references: [id])
+  visitante       Visitante?   @relation(fields: [visitanteId], references: [id])
+  unidade         Unidade?     @relation(fields: [unidadeId], references: [id])
+  pessoaResponsavel Pessoa? @relation("PessoaResponsavelVisita", fields: [pessoaResponsavelId], references: [id])
+  autorizadoPorPessoa Pessoa? @relation("PessoaAutorizouVisita", fields: [autorizadoPorPessoaId], references: [id])
+  dispositivo     Dispositivo? @relation(fields: [dispositivoId], references: [id])
+  autorizadoPor   Usuario?     @relation(fields: [autorizadoPorId], references: [id])
 }
-
 model EventoAcesso {
   id            Int          @id @default(autoincrement())
   condominioId  Int
@@ -256,4 +309,28 @@ model EventoAcesso {
   morador     Morador?     @relation(fields: [moradorId], references: [id])
   pessoa      Pessoa?      @relation(fields: [pessoaId], references: [id])
   dispositivo Dispositivo? @relation(fields: [dispositivoId], references: [id])
+}
+model Configuracao {
+  id           Int      @id @default(autoincrement())
+  condominioId Int     @unique
+
+  tempoMaximoPermanenciaHoras Int     @default(12)
+  permitirEntradaSemAutorizacao Boolean @default(false)
+  exigirUnidade Boolean @default(true)
+  exigirMoradorResponsavel Boolean @default(true)
+
+  abrirPortaoAutomaticamente Boolean @default(false)
+  registrarEntradaAutomaticamente Boolean @default(true)
+  exigirConfirmacaoPorteiro Boolean @default(true)
+  permitirEntradaDireta Boolean @default(false)
+
+  tipoAcionamentoPortao TipoAcionamentoPortao @default(SIMULADO)
+  ipDispositivoPortao String?
+  portaDispositivoPortao Int?
+  tempoAberturaSegundos Int @default(2)
+
+  criadoEm DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  condominio Condominio @relation(fields: [condominioId], references: [id])
 }

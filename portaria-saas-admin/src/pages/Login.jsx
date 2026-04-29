@@ -5,25 +5,56 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function handleLogin(e) {
     e.preventDefault();
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email, senha })
-    });
+    if (!email || !senha) {
+      alert("Preencha email e senha");
+      return;
+    }
 
-    const data = await res.json();
+    try {
+      setLoading(true);
 
-    if (data.token) {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, senha })
+      });
+
+      const data = await res.json();
+
+      if (!data.token) {
+        alert("Email ou senha inválidos");
+        return;
+      }
+
+      // salva token
       localStorage.setItem("token", data.token);
-      window.location.href = "/dashboard";
-    } else {
-      alert("Email ou senha inválidos");
+
+      // pega perfil do token
+      const payload = JSON.parse(atob(data.token.split(".")[1]));
+      const perfil = payload?.perfil;
+
+      // redireciona conforme perfil
+      if (perfil === "PORTARIA") {
+        window.location.href = "/portaria";
+      } else if (perfil === "TECNICO") {
+        window.location.href = "/dispositivos";
+      } else {
+        // SUPER_ADMIN e ADMIN_CONDOMINIO
+        window.location.href = "/dashboard";
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao conectar com o servidor");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -35,7 +66,7 @@ export default function Login() {
         </div>
 
         <h1>ALX Portaria</h1>
-        <p>Acesse o painel administrativo da portaria inteligente.</p>
+        <p>Acesse o sistema da portaria inteligente.</p>
 
         <form onSubmit={handleLogin}>
           <label className="field">
@@ -67,8 +98,12 @@ export default function Login() {
             </div>
           </label>
 
-          <button className="primary-btn login-btn" type="submit">
-            Entrar
+          <button
+            className="primary-btn login-btn"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
       </div>
