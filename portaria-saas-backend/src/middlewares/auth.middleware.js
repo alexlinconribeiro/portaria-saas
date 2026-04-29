@@ -4,7 +4,7 @@ function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(401).json({ erro: "Token n√£o informado" });
+    return res.status(401).json({ erro: "Token n„o informado" });
   }
 
   const token = authHeader.split(" ")[1];
@@ -12,11 +12,22 @@ function authMiddleware(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.usuario = decoded;
+    req.usuario = {
+      ...decoded,
+
+      // ?? PERMISS’ES TEMPOR¡RIAS
+      permissoes: [
+        "visitantes.ver",
+        "visitantes.criar",
+        "visitantes.autorizar",
+        "visitantes.negar",
+        "condominios.ver"
+      ]
+    };
 
     next();
   } catch (err) {
-    return res.status(401).json({ erro: "Token inv√°lido" });
+    return res.status(401).json({ erro: "Token inv·lido" });
   }
 }
 

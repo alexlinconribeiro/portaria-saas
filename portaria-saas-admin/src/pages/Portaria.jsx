@@ -9,6 +9,16 @@ export default function Portaria() {
   const usuario = getUsuarioToken();
   const perfil = usuario?.perfil;
 
+  const podeVerPortaria = usuarioTemPermissao("portaria.ver");
+  const podeOperarPortaria = usuarioTemPermissao("portaria.operar");
+  const podeAbrirPortao = usuarioTemPermissao("portaria.abrir_portao");
+
+  const podeVerVisitantes = usuarioTemPermissao("visitantes.ver");
+  const podeAutorizarVisitantes = usuarioTemPermissao("visitantes.autorizar");
+  const podeNegarVisitantes = usuarioTemPermissao("visitantes.negar");
+
+  const isSuperAdmin = perfil === "SUPER_ADMIN";
+
   const condominioIdUsuario = usuario?.condominioId
     ? String(usuario.condominioId)
     : "1";
@@ -23,32 +33,32 @@ export default function Portaria() {
   const [unidadeSelecionada, setUnidadeSelecionada] = useState(null);
 
   async function carregar(id = condominioId) {
-    let conds = [];
+    if (!podeVerPortaria || !podeVerVisitantes) return;
 
-    if (perfil !== "PORTARIA") {
-      const data = await apiFetch("/condominios");
-      conds = Array.isArray(data) ? data : [];
-    } else {
-      conds = [
-        {
-          id: Number(condominioIdUsuario),
-          nome: "Meu condomínio"
-        }
-      ];
+    try {
+      if (isSuperAdmin) {
+        const data = await apiFetch("/condominios");
+        setCondominios(Array.isArray(data) ? data : []);
+      } else {
+        setCondominios([]);
+      }
+
+      const unidadesData = await apiFetch(`/unidades?condominioId=${id}`);
+      const pessoasData = await apiFetch(`/pessoas?condominioId=${id}`);
+      const visitasData = await apiFetch(`/visitantes?condominioId=${id}`);
+
+      setUnidades(Array.isArray(unidadesData) ? unidadesData : []);
+      setPessoas(Array.isArray(pessoasData) ? pessoasData : []);
+      setVisitas(Array.isArray(visitasData) ? visitasData : []);
+    } catch (erro) {
+      console.error("Erro ao carregar dados da portaria:", erro);
+      alert("Erro ao carregar dados da portaria.");
     }
-
-    const unidadesData = await apiFetch(`/unidades?condominioId=${id}`);
-    const pessoasData = await apiFetch(`/pessoas?condominioId=${id}`);
-    const visitasData = await apiFetch(`/visitantes?condominioId=${id}`);
-
-    setCondominios(conds);
-    setUnidades(Array.isArray(unidadesData) ? unidadesData : []);
-    setPessoas(Array.isArray(pessoasData) ? pessoasData : []);
-    setVisitas(Array.isArray(visitasData) ? visitasData : []);
   }
 
   useEffect(() => {
     carregar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function nomeUnidade(u) {
@@ -90,14 +100,56 @@ export default function Portaria() {
   );
 
   async function acao(id, tipo) {
-    await apiFetch(`/visitantes/${id}/${tipo}`, { method: "PATCH" });
-    carregar(condominioId);
+    if (tipo === "autorizar" && !podeAutorizarVisitantes) {
+      alert("Você não tem permissão para autorizar visitantes.");
+      return;
+    }
+
+    if (tipo === "negar" && !podeNegarVisitantes) {
+      alert("Você não tem permissão para negar visitantes.");
+      return;
+    }
+
+    if (tipo === "saida" && !podeOperarPortaria) {
+      alert("Você não tem permissão para operar a portaria.");
+      return;
+    }
+
+    try {
+      await apiFetch(`/visitantes/${id}/${tipo}`, { method: "PATCH" });
+      carregar(condominioId);
+    } catch (erro) {
+      console.error("Erro ao executar ação:", erro);
+      alert("Erro ao executar ação.");
+    }
   }
 
   async function liberarAcesso(id) {
-    await apiFetch("/portao/abrir", { method: "POST" });
-    await apiFetch(`/visitantes/${id}/entrada`, { method: "PATCH" });
-    carregar(condominioId);
+    if (!podeOperarPortaria || !podeAbrirPortao) {
+      alert("Você não tem permissão para liberar acesso.");
+      return;
+    }
+
+    try {
+      await apiFetch("/portao/abrir", { method: "POST" });
+      await apiFetch(`/visitantes/${id}/entrada`, { method: "PATCH" });
+      carregar(condominioId);
+    } catch (erro) {
+      console.error("Erro ao liberar acesso:", erro);
+      alert("Erro ao liberar acesso.");
+    }
+  }
+
+  if (!podeVerPortaria || !podeVerVisitantes) {
+    return (
+      <Layout title="Portaria" active="/portaria">
+        <section className="panel">
+          <div className="empty">
+            Você não tem permissão para acessar a operação da portaria.
+          </div>
+        </section>
+      </Layout>
+    );
   }
 
   return (
@@ -106,7 +158,7 @@ export default function Portaria() {
         <div className="panel">
           <h2>Buscar unidade</h2>
 
-          {perfil !== "PORTARIA" && (
+          {isSuperAdmin && (
             <Dropdown
               searchable
               placeholder="Condomínio"
@@ -148,51 +200,61 @@ export default function Portaria() {
         </div>
 
         <div className="panel portaria-side-panel">
-		<h2>Atendimento da unidade</h2>
+          <h2>Atendimento da unidade</h2>
 
           {!unidadeSelecionada ? (
-  <div className="empty">Selecione uma unidade para iniciar o atendimento.</div>
-) : (
-  <>
-    <div className="portaria-unit-header">
-      <span>Unidade selecionada</span>
-      <strong>{nomeUnidade(unidadeSelecionada)}</strong>
-      <span>{moradores.length} morador(es) vinculado(s)</span>
-    </div>
-
-    <h4 className="portaria-section-title">Moradores responsáveis</h4>
-
-    {moradores.length === 0 ? (
-      <div className="empty">Nenhum morador vinculado.</div>
-    ) : (
-      moradores.map((m) => (
-        <div key={m.id} className="portaria-person-card">
-          <strong>{m.nome}</strong>
-          <span>{m.telefone || "Sem telefone cadastrado"}</span>
-        </div>
-      ))
-    )}
-
-    <h4 className="portaria-section-title">Visitantes recentes</h4>
-
-    {visitasDaUnidade.length === 0 ? (
-      <div className="empty">Nenhum visitante recente.</div>
-    ) : (
-      visitasDaUnidade.map((v) => (
-        <div key={v.id} className="portaria-visit-card">
-          <div className="visit-row">
-            <div>
-              <strong>{v.nomeVisitante}</strong>
-              <span>Responsável: {v.pessoaResponsavel?.nome || "-"}</span>
+            <div className="empty">
+              Selecione uma unidade para iniciar o atendimento.
             </div>
+          ) : (
+            <>
+              <div className="portaria-unit-header">
+                <span>Unidade selecionada</span>
+                <strong>{nomeUnidade(unidadeSelecionada)}</strong>
+                <span>{moradores.length} morador(es) vinculado(s)</span>
+              </div>
 
-            <span className={`visit-status ${String(v.status || "").toLowerCase()}`}>
-              {v.status || "-"}
-            </span>
-          </div>
-        </div>
-      ))
-    )}
+              <h4 className="portaria-section-title">
+                Moradores responsáveis
+              </h4>
+
+              {moradores.length === 0 ? (
+                <div className="empty">Nenhum morador vinculado.</div>
+              ) : (
+                moradores.map((m) => (
+                  <div key={m.id} className="portaria-person-card">
+                    <strong>{m.nome}</strong>
+                    <span>{m.telefone || "Sem telefone cadastrado"}</span>
+                  </div>
+                ))
+              )}
+
+              <h4 className="portaria-section-title">Visitantes recentes</h4>
+
+              {visitasDaUnidade.length === 0 ? (
+                <div className="empty">Nenhum visitante recente.</div>
+              ) : (
+                visitasDaUnidade.map((v) => (
+                  <div key={v.id} className="portaria-visit-card">
+                    <div className="visit-row">
+                      <div>
+                        <strong>{v.nomeVisitante}</strong>
+                        <span>
+                          Responsável: {v.pessoaResponsavel?.nome || "-"}
+                        </span>
+                      </div>
+
+                      <span
+                        className={`visit-status ${String(
+                          v.status || ""
+                        ).toLowerCase()}`}
+                      >
+                        {v.status || "-"}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </>
           )}
         </div>
@@ -206,34 +268,66 @@ export default function Portaria() {
         ) : (
           fila.map((v) => (
             <div key={v.id} className="info-card">
-              <strong>{v.nomeVisitante}</strong>
+              <div className="info-card-header">
+                <div>
+                  <small>Status: {v.status}</small>
+                  <strong>{v.nomeVisitante}</strong>
+                  <p>Unidade: {v.unidade?.identificacao || "-"}</p>
+                  <p>Responsável: {v.pessoaResponsavel?.nome || "-"}</p>
+                </div>
 
-              {v.status === "PENDENTE" &&
-                usuarioTemPermissao("visitantes.autorizar") && (
+                <span
+                  className={`status-pill ${String(
+                    v.status || ""
+                  ).toLowerCase()}`}
+                >
+                  {v.status}
+                </span>
+              </div>
+
+              <div className="info-action">
+                {v.status === "PENDENTE" && (
                   <>
-                    <button onClick={() => acao(v.id, "autorizar")}>
-                      Autorizar
-                    </button>
+                    {podeAutorizarVisitantes && (
+                      <button
+                        className="table-btn"
+                        onClick={() => acao(v.id, "autorizar")}
+                      >
+                        Autorizar
+                      </button>
+                    )}
 
-                    <button onClick={() => acao(v.id, "negar")}>
-                      Negar
-                    </button>
+                    {podeNegarVisitantes && (
+                      <button
+                        className="table-btn secondary-table-btn"
+                        onClick={() => acao(v.id, "negar")}
+                      >
+                        Negar
+                      </button>
+                    )}
                   </>
                 )}
 
-              {v.status === "AUTORIZADO" &&
-                usuarioTemPermissao("portaria.operar") && (
-                  <button onClick={() => liberarAcesso(v.id)}>
-                    Liberar acesso
-                  </button>
-                )}
+                {v.status === "AUTORIZADO" &&
+                  podeOperarPortaria &&
+                  podeAbrirPortao && (
+                    <button
+                      className="table-btn"
+                      onClick={() => liberarAcesso(v.id)}
+                    >
+                      Liberar acesso
+                    </button>
+                  )}
 
-              {v.status === "EM_ANDAMENTO" &&
-                usuarioTemPermissao("visitantes.finalizar") && (
-                  <button onClick={() => acao(v.id, "saida")}>
+                {v.status === "EM_ANDAMENTO" && podeOperarPortaria && (
+                  <button
+                    className="table-btn"
+                    onClick={() => acao(v.id, "saida")}
+                  >
                     Registrar saída
                   </button>
                 )}
+              </div>
             </div>
           ))
         )}
