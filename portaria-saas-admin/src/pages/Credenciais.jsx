@@ -11,6 +11,13 @@ const vazio = {
   identificador: ""
 };
 
+function tipoLabel(tipo) {
+  if (tipo === "FACIAL") return "Facial";
+  if (tipo === "TAG") return "Tag RFID";
+  if (tipo === "SENHA") return "Senha";
+  return tipo || "-";
+}
+
 export default function Credenciais() {
   const [credenciais, setCredenciais] = useState([]);
   const [condominios, setCondominios] = useState([]);
@@ -18,20 +25,31 @@ export default function Credenciais() {
   const [form, setForm] = useState(vazio);
   const [modalAberto, setModalAberto] = useState(false);
   const [condominioFiltro, setCondominioFiltro] = useState("1");
+  const [buscaPessoa, setBuscaPessoa] = useState("");
 
   async function carregar(id = condominioFiltro) {
     const conds = await apiFetch("/condominios");
-    setCondominios(Array.isArray(conds) ? conds : []);
+    const listaConds = Array.isArray(conds) ? conds : [];
 
-    const pessoasData = await apiFetch(`/pessoas?condominioId=${id}`);
+    setCondominios(listaConds);
+
+    const idFinal = id || String(listaConds[0]?.id || "1");
+
+    if (!id && listaConds[0]?.id) {
+      setCondominioFiltro(String(listaConds[0].id));
+    }
+
+    const pessoasData = await apiFetch(`/pessoas?condominioId=${idFinal}`);
     setPessoas(Array.isArray(pessoasData) ? pessoasData : []);
 
-    const credenciaisData = await apiFetch(`/credenciais?condominioId=${id}`);
+    const credenciaisData = await apiFetch(
+      `/credenciais?condominioId=${idFinal}`
+    );
     setCredenciais(Array.isArray(credenciaisData) ? credenciaisData : []);
   }
 
   function atualizar(campo, valor) {
-    setForm({ ...form, [campo]: valor });
+    setForm((atual) => ({ ...atual, [campo]: valor }));
   }
 
   async function trocarCondominioFormulario(id) {
@@ -56,32 +74,57 @@ export default function Credenciais() {
       return;
     }
 
-    await apiFetch("/credenciais", {
-      method: "POST",
-      body: JSON.stringify({
-        pessoaId: Number(form.pessoaId),
-        tipo: form.tipo,
-        identificador: form.identificador
-      })
-    });
+    try {
+      await apiFetch("/credenciais", {
+        method: "POST",
+        body: JSON.stringify({
+          pessoaId: Number(form.pessoaId),
+          tipo: form.tipo,
+          identificador: form.identificador
+        })
+      });
 
-    fecharModal();
-    carregar(form.condominioId);
+      fecharModal();
+      carregar(form.condominioId);
+    } catch (erro) {
+      alert(erro.message || "Erro ao salvar credencial");
+    }
   }
 
-  async function desativar(id) {
-    if (!confirm("Deseja desativar esta credencial?")) return;
+  async function alternarStatus(credencial) {
+    try {
+      await apiFetch(`/credenciais/${credencial.id}/status`, {
+        method: "PUT",
+        body: JSON.stringify({
+          ativo: !credencial.ativo
+        })
+      });
 
-    await apiFetch(`/credenciais/${id}/desativar`, {
-      method: "PUT"
-    });
-
-    carregar(condominioFiltro);
+      setCredenciais((atual) =>
+        atual.map((item) =>
+          item.id === credencial.id
+            ? { ...item, ativo: !credencial.ativo }
+            : item
+        )
+      );
+    } catch (erro) {
+      alert(erro.message || "Erro ao alterar status da credencial");
+    }
   }
 
   useEffect(() => {
     carregar();
   }, []);
+
+  const credenciaisFiltradas = credenciais.filter((c) => {
+    const texto = `${c.pessoa?.nome || ""} ${c.identificador || ""} ${
+      c.tipo || ""
+    }`.toLowerCase();
+
+    return texto.includes(buscaPessoa.toLowerCase());
+  });
+
+  const ativas = credenciais.filter((c) => c.ativo).length;
 
   return (
     <Layout
@@ -94,16 +137,22 @@ export default function Credenciais() {
         </button>
       }
     >
-      <section className="panel">
-        <h2>Filtro</h2>
+      <section className="panel modules-header-panel">
+        <div>
+          <h2>Filtro</h2>
+          <p className="muted-text">
+            Selecione o condomínio e filtre por pessoa, tipo ou identificador.
+          </p>
+        </div>
 
-        <div className="filters">
+        <div className="form-grid">
           <Dropdown
             searchable
             placeholder="Condomínio"
             value={condominioFiltro}
             onChange={(val) => {
               setCondominioFiltro(val);
+              setBuscaPessoa("");
               carregar(val);
             }}
             options={condominios.map((c) => ({
@@ -111,50 +160,84 @@ export default function Credenciais() {
               value: String(c.id)
             }))}
           />
+
+          <input
+            placeholder="Filtrar por pessoa, tipo ou identificador..."
+            value={buscaPessoa}
+            onChange={(e) => setBuscaPessoa(e.target.value)}
+          />
         </div>
       </section>
 
-      <section className="panel logs-panel">
-        <h2>Credenciais cadastradas</h2>
+      <section className="modules-summary">
+        <div className="summary-card">
+          <span>Credenciais ativas</span>
+          <strong>{ativas}</strong>
+        </div>
 
-        {credenciais.length === 0 ? (
-          <div className="empty">Nenhuma credencial cadastrada.</div>
+        <div className="summary-card">
+          <span>Total cadastrado</span>
+          <strong>{credenciais.length}</strong>
+        </div>
+
+        <div className="summary-card">
+          <span>Exibindo no filtro</span>
+          <strong>{credenciaisFiltradas.length}</strong>
+        </div>
+      </section>
+
+      <section className="panel module-category-panel">
+        <div className="module-category-header">
+          <div>
+            <h2>Credenciais cadastradas</h2>
+            <p className="muted-text">
+              Ative ou desative faciais, tags e senhas de acesso.
+            </p>
+          </div>
+        </div>
+
+        {credenciaisFiltradas.length === 0 ? (
+          <div className="empty">Nenhuma credencial encontrada.</div>
         ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Pessoa</th>
-                <th>Tipo</th>
-                <th>Identificador</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
+          <div className="module-grid">
+            {credenciaisFiltradas.map((c) => (
+              <div
+                key={c.id}
+                className={`module-card credential-card ${
+                  c.ativo ? "active" : ""
+                }`}
+              >
+                <div className="module-card-info">
+                  <strong>{c.pessoa?.nome || "Pessoa não informada"}</strong>
+                  <span>
+                    {tipoLabel(c.tipo)} · {c.identificador}
+                  </span>
+                  <small>{c.condominio?.nome || ""}</small>
+                </div>
 
-            <tbody>
-              {credenciais.map((c) => (
-                <tr key={c.id}>
-                  <td>{c.id}</td>
-                  <td>{c.pessoa?.nome || "-"}</td>
-                  <td>{c.tipo}</td>
-                  <td>{c.identificador}</td>
-                  <td>
-                    <span className={`badge ${c.ativo ? "ok" : "bad"}`}>
-                      {c.ativo ? "ATIVA" : "INATIVA"}
-                    </span>
-                  </td>
-                  <td>
-                    {c.ativo && (
-                      <button className="table-btn" onClick={() => desativar(c.id)}>
-                        Desativar
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                <div className="module-card-action">
+                  <span
+                    className={`module-status ${
+                      c.ativo ? "active" : "inactive"
+                    }`}
+                  >
+                    {c.ativo ? "Ativa" : "Inativa"}
+                  </span>
+
+                  <button
+                    type="button"
+                    className={`ios-toggle ${c.ativo ? "on" : ""}`}
+                    onClick={() => alternarStatus(c)}
+                    aria-label={
+                      c.ativo ? "Desativar credencial" : "Ativar credencial"
+                    }
+                  >
+                    <span />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </section>
 
@@ -165,11 +248,15 @@ export default function Credenciais() {
         onClose={fecharModal}
         footer={
           <>
-            <button className="primary-btn" onClick={salvar}>
+            <button type="button" className="primary-btn" onClick={salvar}>
               Salvar credencial
             </button>
 
-            <button className="secondary-btn" onClick={fecharModal}>
+            <button
+              type="button"
+              className="secondary-btn"
+              onClick={fecharModal}
+            >
               Cancelar
             </button>
           </>
@@ -221,7 +308,7 @@ export default function Credenciais() {
           <label className="field">
             <span>Identificador</span>
             <input
-              placeholder="Ex: face_123456, UID da tag ou senha"
+              placeholder="Ex: código facial, tag ou senha"
               value={form.identificador}
               onChange={(e) => atualizar("identificador", e.target.value)}
             />

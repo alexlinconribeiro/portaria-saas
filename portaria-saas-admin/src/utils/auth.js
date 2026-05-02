@@ -1,49 +1,55 @@
-import { temPermissao } from "./permissoes";
-
-export function getToken() {
-  return localStorage.getItem("token");
-}
-
-export function getUsuarioToken() {
+function decodeJwt(token) {
   try {
-    const token = getToken();
-    if (!token) return null;
+    const payload = token.split(".")[1];
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`)
+        .join("")
+    );
 
-    return JSON.parse(atob(token.split(".")[1]));
-  } catch {
+    return JSON.parse(json);
+  } catch (err) {
     return null;
   }
 }
 
+export function getUsuarioToken() {
+  const token = localStorage.getItem("token");
+
+  if (!token) return null;
+
+  return decodeJwt(token);
+}
+
 export function getPerfil() {
   const usuario = getUsuarioToken();
-
-  return (
-    usuario?.perfil ||
-    usuario?.tipo ||
-    usuario?.role ||
-    usuario?.nivel ||
-    usuario?.permissao ||
-    null
-  );
+  return usuario?.perfil || null;
 }
 
 export function usuarioTemPermissao(permissao) {
-  const perfil = getPerfil();
-  return temPermissao(perfil, permissao);
+  const usuario = getUsuarioToken();
+
+  if (!usuario) return false;
+
+  if (usuario.perfil === "SUPER_ADMIN") return true;
+
+  const permissoes = usuario.permissoes || [];
+
+  return permissoes.includes(permissao);
 }
 
-export function isAdmin() {
-  const perfil = getPerfil();
-  return perfil === "SUPER_ADMIN" || perfil === "ADMIN_CONDOMINIO";
-}
+export function temModulo(modulo) {
+  const usuario = getUsuarioToken();
 
-export function isPortaria() {
-  return getPerfil() === "PORTARIA";
-}
+  if (!usuario) return false;
 
-export function isTecnico() {
-  return getPerfil() === "TECNICO";
+  if (usuario.perfil === "SUPER_ADMIN") return true;
+
+  const modulos = usuario.modulos || [];
+
+  return modulos.includes(modulo);
 }
 
 export function logout() {

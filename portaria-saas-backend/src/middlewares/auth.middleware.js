@@ -12,18 +12,7 @@ function authMiddleware(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.usuario = {
-      ...decoded,
-
-      // ?? PERMISSÕES TEMPORÁRIAS
-      permissoes: [
-        "visitantes.ver",
-        "visitantes.criar",
-        "visitantes.autorizar",
-        "visitantes.negar",
-        "condominios.ver"
-      ]
-    };
+    req.usuario = decoded;
 
     next();
   } catch (err) {

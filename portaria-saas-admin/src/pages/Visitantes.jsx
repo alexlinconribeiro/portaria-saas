@@ -1,3 +1,4 @@
+import Permissao from "../components/Permissao";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../services/api";
 import Layout from "../components/Layout";
@@ -246,9 +247,11 @@ export default function Visitantes() {
       active="/visitantes"
       action={
         podeCriar ? (
-          <button className="primary-btn" onClick={abrirNovo}>
-            + Novo visitante
-          </button>
+         <Permissao perm="visitantes.criar">
+			<button className="primary-btn" onClick={abrirNovo}>
+				+ Novo visitante
+			</button>
+		</Permissao>
         ) : null
       }
     >
@@ -323,12 +326,11 @@ export default function Visitantes() {
 
                   {podeAutorizar && (
                     <td>
-                      <button
-                        className="table-btn"
-                        onClick={() => acao(v.id, "saida")}
-                      >
-                        Registrar saída
-                      </button>
+                    <Permissao perm="portaria.operar">
+						<button className="table-btn" onClick={() => acao(v.id, "saida")}>
+							Registrar saída
+						</button>
+					</Permissao>
                     </td>
                   )}
                 </tr>
@@ -392,21 +394,22 @@ export default function Visitantes() {
                       {v.status === "PENDENTE" && (
                         <>
                           {podeAutorizar && (
-                            <button
-                              className="table-btn"
-                              onClick={() => acao(v.id, "autorizar")}
-                            >
-                              Autorizar
-                            </button>
+                            <Permissao perm="visitantes.autorizar">
+									<button className="table-btn" onClick={() => acao(v.id, "autorizar")}>
+										Autorizar
+									</button>
+							</Permissao>
                           )}
 
                           {podeNegar && (
-                            <button
-                              className="table-btn secondary-table-btn"
-                              onClick={() => acao(v.id, "negar")}
-                            >
-                              Negar
-                            </button>
+                            <Permissao perm="visitantes.negar">
+								<button
+									className="table-btn secondary-table-btn"
+									onClick={() => acao(v.id, "negar")}
+								>
+									Negar
+								</button>
+								</Permissao>
                           )}
                         </>
                       )}

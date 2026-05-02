@@ -194,7 +194,7 @@ export default function Dashboard() {
     </a>
   </div>
 
-  <div className="soft-links">
+    <div className="soft-links">
     <a href="/logs">Ver logs de acesso</a>
     <a href="/dispositivos">Ver dispositivos</a>
   </div>

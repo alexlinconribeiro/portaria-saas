@@ -1,9 +1,12 @@
+import Permissao from "../components/Permissao";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../services/api";
 import Layout from "../components/Layout";
 import Modal from "../components/Modal";
+import Dropdown from "../components/Dropdown";
 
 const vazio = {
+  integradorId: "",
   nome: "",
   documento: "",
   telefone: "",
@@ -19,6 +22,7 @@ const vazio = {
 
 export default function Condominios() {
   const [lista, setLista] = useState([]);
+  const [integradores, setIntegradores] = useState([]);
   const [form, setForm] = useState(vazio);
   const [editandoId, setEditandoId] = useState(null);
   const [modalAberto, setModalAberto] = useState(false);
@@ -26,14 +30,20 @@ export default function Condominios() {
   async function carregar() {
     const data = await apiFetch("/condominios");
     setLista(Array.isArray(data) ? data : []);
+
+    const integradoresData = await apiFetch("/integradores");
+    setIntegradores(Array.isArray(integradoresData) ? integradoresData : []);
   }
 
   function atualizar(campo, valor) {
-    setForm({ ...form, [campo]: valor });
+    setForm((atual) => ({ ...atual, [campo]: valor }));
   }
 
   function abrirNovo() {
-    setForm(vazio);
+    setForm({
+      ...vazio,
+      integradorId: integradores[0]?.id ? String(integradores[0].id) : ""
+    });
     setEditandoId(null);
     setModalAberto(true);
   }
@@ -41,6 +51,7 @@ export default function Condominios() {
   function editar(c) {
     setEditandoId(c.id);
     setForm({
+      integradorId: c.integradorId ? String(c.integradorId) : "",
       nome: c.nome || "",
       documento: c.documento || "",
       telefone: c.telefone || "",
@@ -68,15 +79,25 @@ export default function Condominios() {
       return;
     }
 
+    if (!form.integradorId) {
+      alert("Selecione um integrador");
+      return;
+    }
+
+    const payload = {
+      ...form,
+      integradorId: Number(form.integradorId)
+    };
+
     if (editandoId) {
       await apiFetch(`/condominios/${editandoId}`, {
         method: "PUT",
-        body: JSON.stringify(form)
+        body: JSON.stringify(payload)
       });
     } else {
       await apiFetch("/condominios", {
         method: "POST",
-        body: JSON.stringify(form)
+        body: JSON.stringify(payload)
       });
     }
 
@@ -94,9 +115,11 @@ export default function Condominios() {
       description="Cadastre e gerencie clientes da plataforma."
       active="/condominios"
       action={
-        <button className="primary-btn" onClick={abrirNovo}>
-          + Adicionar condomínio
-        </button>
+        <Permissao perm="condominios.criar">
+          <button className="primary-btn" onClick={abrirNovo}>
+            + Adicionar condomínio
+          </button>
+        </Permissao>
       }
     >
       <section className="panel">
@@ -110,6 +133,7 @@ export default function Condominios() {
               <tr>
                 <th>ID</th>
                 <th>Nome</th>
+                <th>Integrador</th>
                 <th>Documento</th>
                 <th>Responsável</th>
                 <th>Cidade</th>
@@ -123,6 +147,7 @@ export default function Condominios() {
                 <tr key={c.id}>
                   <td>{c.id}</td>
                   <td>{c.nome}</td>
+                  <td>{c.integrador?.nome || "-"}</td>
                   <td>{c.documento || "-"}</td>
                   <td>{c.responsavel || "-"}</td>
                   <td>{c.cidade || "-"}</td>
@@ -132,9 +157,11 @@ export default function Condominios() {
                     </span>
                   </td>
                   <td>
-                    <button className="table-btn" onClick={() => editar(c)}>
-                      Editar
-                    </button>
+                    <Permissao perm="condominios.editar">
+                      <button className="table-btn" onClick={() => editar(c)}>
+                        Editar
+                      </button>
+                    </Permissao>
                   </td>
                 </tr>
               ))}
@@ -150,9 +177,13 @@ export default function Condominios() {
         onClose={fecharModal}
         footer={
           <>
-            <button className="primary-btn" onClick={salvar}>
-              {editandoId ? "Salvar alterações" : "Criar condomínio"}
-            </button>
+            <Permissao
+              perm={editandoId ? "condominios.editar" : "condominios.criar"}
+            >
+              <button className="primary-btn" onClick={salvar}>
+                {editandoId ? "Salvar alterações" : "Criar condomínio"}
+              </button>
+            </Permissao>
 
             <button className="secondary-btn" onClick={fecharModal}>
               Cancelar
@@ -161,6 +192,20 @@ export default function Condominios() {
         }
       >
         <div className="form-grid">
+          <label className="field">
+            <span>Integrador</span>
+            <Dropdown
+              searchable
+              placeholder="Selecione o integrador"
+              value={form.integradorId}
+              onChange={(val) => atualizar("integradorId", val)}
+              options={integradores.map((i) => ({
+                label: i.nome,
+                value: String(i.id)
+              }))}
+            />
+          </label>
+
           <label className="field">
             <span>Nome</span>
             <input

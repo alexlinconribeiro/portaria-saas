@@ -1,3 +1,4 @@
+import Permissao from "../components/Permissao";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../services/api";
 import Dropdown from "../components/Dropdown";
@@ -101,9 +102,11 @@ export default function Usuarios() {
       description="Controle de acesso administrativo por perfil."
       active="/usuarios"
       action={
-        <button className="primary-btn" onClick={abrirNovo}>
-          + Adicionar usuário
-        </button>
+		<Permissao perm="usuarios.criar">
+		<button className="primary-btn" onClick={abrirNovo}>
+			+ Adicionar usuário
+		</button>
+		</Permissao>		
       }
     >
       <section className="panel">
@@ -142,9 +145,11 @@ export default function Usuarios() {
                       </span>
                     </td>
                     <td>
-                      <button className="table-btn" onClick={() => editar(u)}>
-                        Editar
-                      </button>
+						<Permissao perm="usuarios.editar">
+						<button className="table-btn" onClick={() => editar(u)}>
+							Editar
+						</button>
+						</Permissao>
                     </td>
                   </tr>
                 );
@@ -165,9 +170,11 @@ export default function Usuarios() {
         onClose={fecharModal}
         footer={
 			<>
-				<button className="primary-btn" onClick={salvar}>
-				{editandoId ? "Salvar alterações" : "Salvar dispositivo"}
-				</button>
+			<Permissao perm={editandoId ? "usuarios.editar" : "usuarios.criar"}>
+			<button className="primary-btn" onClick={salvar}>
+				{editandoId ? "Salvar alterações" : "Salvar usuário"}
+			</button>
+			</Permissao>
 			
 				<button className="secondary-btn" onClick={() => setModal(false)}>
 				Cancelar

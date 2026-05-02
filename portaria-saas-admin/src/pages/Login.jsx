@@ -1,7 +1,12 @@
+import { getTemaSistema } from "../utils/themeLoader";
 import { useState } from "react";
 import { Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { carregarTema } from "../utils/themeLoader";
 
 export default function Login() {
+  const tema = getTemaSistema();
+const nomeSistema = tema?.nomeSistema || "ALX Portaria";
+const logoUrl = tema?.logoUrl;
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
@@ -35,7 +40,7 @@ export default function Login() {
 
       // salva token
       localStorage.setItem("token", data.token);
-
+	  await carregarTema();
       // pega perfil do token
       const payload = JSON.parse(atob(data.token.split(".")[1]));
       const perfil = payload?.perfil;
@@ -65,7 +70,15 @@ export default function Login() {
           <ShieldCheck size={32} />
         </div>
 
-        <h1>ALX Portaria</h1>
+        {logoUrl && (
+  <img
+    src={logoUrl}
+    alt={nomeSistema}
+    className="login-logo"
+  />
+)}
+
+<h1>{nomeSistema}</h1>
         <p>Acesse o sistema da portaria inteligente.</p>
 
         <form onSubmit={handleLogin}>

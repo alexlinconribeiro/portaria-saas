@@ -1,5 +1,13 @@
 require("dotenv").config();
 
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const { PrismaClient } = require("@prisma/client");
+
+const integradoresRoutes = require("./routes/integradores.routes");
+const temaRoutes = require("./routes/tema.routes");
+const modulosRoutes = require("./routes/modulos.routes");
 const perfilRoutes = require("./routes/perfil.routes");
 const configuracoesRoutes = require("./routes/configuracoes.routes");
 const visitantesRoutes = require("./routes/visitantes.routes");
@@ -12,12 +20,8 @@ const unidadesRoutes = require("./routes/unidades.routes");
 const moradoresRoutes = require("./routes/moradores.routes");
 const usuariosRoutes = require("./routes/usuarios.routes");
 const condominiosRoutes = require("./routes/condominios.routes");
-const authMiddleware = require("./middlewares/auth.middleware");
 const authRoutes = require("./routes/auth.routes");
-const express = require("express");
-const cors = require("cors");
-const { PrismaClient } = require("@prisma/client");
-
+const authMiddleware = require("./middlewares/auth.middleware");
 
 const app = express();
 const prisma = new PrismaClient();
@@ -26,6 +30,9 @@ const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
+
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 app.use("/auth", authRoutes);
 app.use("/condominios", condominiosRoutes);
 app.use("/usuarios", usuariosRoutes);
@@ -39,12 +46,17 @@ app.use("/dispositivos", dispositivosRoutes);
 app.use("/visitantes", visitantesRoutes);
 app.use("/configuracoes", configuracoesRoutes);
 app.use("/perfil", perfilRoutes);
+app.use("/modulos", modulosRoutes);
+app.use("/tema", temaRoutes);
+app.use("/integradores", integradoresRoutes);
+
 app.get("/protegido", authMiddleware, (req, res) => {
   res.json({
     mensagem: "Você está autenticado",
     usuario: req.usuario
   });
 });
+
 app.get("/", (req, res) => {
   res.json({
     app: "Portaria SaaS Backend",

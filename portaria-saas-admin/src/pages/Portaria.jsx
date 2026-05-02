@@ -1,3 +1,4 @@
+import Permissao from "../components/Permissao";
 import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import Layout from "../components/Layout";
@@ -289,21 +290,22 @@ export default function Portaria() {
                 {v.status === "PENDENTE" && (
                   <>
                     {podeAutorizarVisitantes && (
-                      <button
-                        className="table-btn"
-                        onClick={() => acao(v.id, "autorizar")}
-                      >
-                        Autorizar
-                      </button>
+                      <Permissao perm="visitantes.autorizar">
+						<button className="table-btn" onClick={() => acao(v.id, "autorizar")}>
+							Autorizar
+						</button>
+						</Permissao>
                     )}
 
                     {podeNegarVisitantes && (
-                      <button
-                        className="table-btn secondary-table-btn"
-                        onClick={() => acao(v.id, "negar")}
-                      >
-                        Negar
-                      </button>
+						<Permissao perm="visitantes.negar">
+						<button
+							className="table-btn secondary-table-btn"
+							onClick={() => acao(v.id, "negar")}
+						>
+							Negar
+						</button>
+						</Permissao>
                     )}
                   </>
                 )}
@@ -311,21 +313,19 @@ export default function Portaria() {
                 {v.status === "AUTORIZADO" &&
                   podeOperarPortaria &&
                   podeAbrirPortao && (
-                    <button
-                      className="table-btn"
-                      onClick={() => liberarAcesso(v.id)}
-                    >
-                      Liberar acesso
-                    </button>
+					<Permissao perm="portaria.abrir_portao">
+					<button className="table-btn" onClick={() => liberarAcesso(v.id)}>
+						Liberar acesso
+					</button>
+					</Permissao>					
                   )}
 
                 {v.status === "EM_ANDAMENTO" && podeOperarPortaria && (
-                  <button
-                    className="table-btn"
-                    onClick={() => acao(v.id, "saida")}
-                  >
-                    Registrar saída
-                  </button>
+				<Permissao perm="portaria.operar">
+				<button className="table-btn" onClick={() => acao(v.id, "saida")}>
+					Registrar saída
+				</button>
+				</Permissao>				
                 )}
               </div>
             </div>

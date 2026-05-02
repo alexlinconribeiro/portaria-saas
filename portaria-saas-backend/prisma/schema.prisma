@@ -50,6 +50,7 @@ enum StatusAcesso {
   NEGADO
   PENDENTE
 }
+
 enum StatusVisita {
   PENDENTE
   AUTORIZADO
@@ -65,12 +66,14 @@ enum TipoVisita {
   PRESTADOR
   ENTREGA
 }
+
 enum TipoAcionamentoPortao {
   SIMULADO
   HTTP
   RELE
   API
 }
+
 enum TemaUsuario {
   ESCURO
   CLARO
@@ -96,11 +99,11 @@ model Pessoa {
   condominio Condominio       @relation(fields: [condominioId], references: [id])
   empresa    EmpresaTerceira? @relation(fields: [empresaId], references: [id])
 
-  unidades    PessoaUnidade[]
-  credenciais CredencialAcesso[]
-  acessos     EventoAcesso[]
-  visitasResponsavel Visita[] @relation("PessoaResponsavelVisita")
-  visitasAutorizadasComoPessoa Visita[] @relation("PessoaAutorizouVisita")
+  unidades                     PessoaUnidade[]
+  credenciais                  CredencialAcesso[]
+  acessos                      EventoAcesso[]
+  visitasResponsavel           Visita[]           @relation("PessoaResponsavelVisita")
+  visitasAutorizadasComoPessoa Visita[]           @relation("PessoaAutorizouVisita")
 }
 
 model PessoaUnidade {
@@ -133,21 +136,23 @@ model EmpresaTerceira {
 }
 
 model Condominio {
-  id          Int      @id @default(autoincrement())
-  nome        String
-  documento   String?
-  telefone    String?
-  email       String?
-  responsavel String?
-  cep         String?
-  endereco    String?
-  numero      String?
-  bairro      String?
-  cidade      String?
-  estado      String?
-  ativo       Boolean  @default(true)
-  criadoEm    DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  integradorId Int?
+  nome         String
+  documento    String?
+  telefone     String?
+  email        String?
+  responsavel  String?
+  cep          String?
+  endereco     String?
+  numero       String?
+  bairro       String?
+  cidade       String?
+  estado       String?
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now())
 
+  integrador        Integrador?        @relation(fields: [integradorId], references: [id])
   usuarios          Usuario[]
   unidades          Unidade[]
   moradores         Morador[]
@@ -156,8 +161,10 @@ model Condominio {
   visitas           Visita[]
   acessos           EventoAcesso[]
   pessoas           Pessoa[]
+  modulos           CondominioModulo[]
+  credenciais       CredencialAcesso[]
   empresasTerceiras EmpresaTerceira[]
-  configuracao Configuracao?
+  configuracao      Configuracao?
 }
 
 model Usuario {
@@ -167,11 +174,11 @@ model Usuario {
   email        String        @unique
   senhaHash    String
   perfil       PerfilUsuario
-  tema TemaUsuario @default(ESCURO)
+  tema         TemaUsuario   @default(ESCURO)
   ativo        Boolean       @default(true)
   criadoEm     DateTime      @default(now())
 
-  condominio Condominio? @relation(fields: [condominioId], references: [id])
+  condominio         Condominio? @relation(fields: [condominioId], references: [id])
   visitasAutorizadas Visita[]
 }
 
@@ -208,17 +215,16 @@ model Morador {
 model CredencialAcesso {
   id            Int            @id @default(autoincrement())
   condominioId  Int
-  moradorId     Int
-  pessoaId      Int?
+  moradorId     Int?
+  pessoaId      Int
   tipo          TipoCredencial
   identificador String
   ativo         Boolean        @default(true)
   criadoEm      DateTime       @default(now())
 
-  morador Morador @relation(fields: [moradorId], references: [id])
-  pessoa  Pessoa? @relation(fields: [pessoaId], references: [id])
-
-  @@unique([condominioId, tipo, identificador])
+  condominio Condominio @relation(fields: [condominioId], references: [id])
+  morador    Morador?   @relation(fields: [moradorId], references: [id])
+  pessoa     Pessoa     @relation(fields: [pessoaId], references: [id])
 }
 
 model Dispositivo {
@@ -256,42 +262,43 @@ model Visitante {
 }
 
 model Visita {
-  id              Int          @id @default(autoincrement())
-  condominioId    Int
-  visitanteId     Int?
-  unidadeId       Int?
-  pessoaResponsavelId Int?
+  id                    Int  @id @default(autoincrement())
+  condominioId          Int
+  visitanteId           Int?
+  unidadeId             Int?
+  pessoaResponsavelId   Int?
   autorizadoPorPessoaId Int?
-  dispositivoId   Int?
-  autorizadoPorId Int?
+  dispositivoId         Int?
+  autorizadoPorId       Int?
 
-  nomeVisitante   String
-  documento       String?
-  telefone        String?
-  motivo          String?
-  observacao      String?
+  nomeVisitante String
+  documento     String?
+  telefone      String?
+  motivo        String?
+  observacao    String?
 
-  tipo            TipoVisita   @default(AVULSA)
-  status          StatusVisita @default(PENDENTE)
+  tipo   TipoVisita   @default(AVULSA)
+  status StatusVisita @default(PENDENTE)
 
-  dataPrevista    DateTime?
-  entradaEm       DateTime?
-  saidaEm         DateTime?
-  autorizadoEm    DateTime?
-  negadoEm        DateTime?
-  canceladoEm     DateTime?
+  dataPrevista DateTime?
+  entradaEm    DateTime?
+  saidaEm      DateTime?
+  autorizadoEm DateTime?
+  negadoEm     DateTime?
+  canceladoEm  DateTime?
 
-  criadoEm        DateTime     @default(now())
-  atualizadoEm    DateTime     @updatedAt
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
 
-  condominio      Condominio   @relation(fields: [condominioId], references: [id])
-  visitante       Visitante?   @relation(fields: [visitanteId], references: [id])
-  unidade         Unidade?     @relation(fields: [unidadeId], references: [id])
-  pessoaResponsavel Pessoa? @relation("PessoaResponsavelVisita", fields: [pessoaResponsavelId], references: [id])
-  autorizadoPorPessoa Pessoa? @relation("PessoaAutorizouVisita", fields: [autorizadoPorPessoaId], references: [id])
-  dispositivo     Dispositivo? @relation(fields: [dispositivoId], references: [id])
-  autorizadoPor   Usuario?     @relation(fields: [autorizadoPorId], references: [id])
+  condominio          Condominio   @relation(fields: [condominioId], references: [id])
+  visitante           Visitante?   @relation(fields: [visitanteId], references: [id])
+  unidade             Unidade?     @relation(fields: [unidadeId], references: [id])
+  pessoaResponsavel   Pessoa?      @relation("PessoaResponsavelVisita", fields: [pessoaResponsavelId], references: [id])
+  autorizadoPorPessoa Pessoa?      @relation("PessoaAutorizouVisita", fields: [autorizadoPorPessoaId], references: [id])
+  dispositivo         Dispositivo? @relation(fields: [dispositivoId], references: [id])
+  autorizadoPor       Usuario?     @relation(fields: [autorizadoPorId], references: [id])
 }
+
 model EventoAcesso {
   id            Int          @id @default(autoincrement())
   condominioId  Int
@@ -310,27 +317,102 @@ model EventoAcesso {
   pessoa      Pessoa?      @relation(fields: [pessoaId], references: [id])
   dispositivo Dispositivo? @relation(fields: [dispositivoId], references: [id])
 }
+
 model Configuracao {
-  id           Int      @id @default(autoincrement())
-  condominioId Int     @unique
+  id           Int @id @default(autoincrement())
+  condominioId Int @unique
 
-  tempoMaximoPermanenciaHoras Int     @default(12)
+  tempoMaximoPermanenciaHoras   Int     @default(12)
   permitirEntradaSemAutorizacao Boolean @default(false)
-  exigirUnidade Boolean @default(true)
-  exigirMoradorResponsavel Boolean @default(true)
+  exigirUnidade                 Boolean @default(true)
+  exigirMoradorResponsavel      Boolean @default(true)
 
-  abrirPortaoAutomaticamente Boolean @default(false)
+  abrirPortaoAutomaticamente      Boolean @default(false)
   registrarEntradaAutomaticamente Boolean @default(true)
-  exigirConfirmacaoPorteiro Boolean @default(true)
-  permitirEntradaDireta Boolean @default(false)
+  exigirConfirmacaoPorteiro       Boolean @default(true)
+  permitirEntradaDireta           Boolean @default(false)
 
-  tipoAcionamentoPortao TipoAcionamentoPortao @default(SIMULADO)
-  ipDispositivoPortao String?
+  tipoAcionamentoPortao  TipoAcionamentoPortao @default(SIMULADO)
+  ipDispositivoPortao    String?
   portaDispositivoPortao Int?
-  tempoAberturaSegundos Int @default(2)
+  tempoAberturaSegundos  Int                   @default(2)
 
-  criadoEm DateTime @default(now())
+  criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
   condominio Condominio @relation(fields: [condominioId], references: [id])
+}
+
+model Permissao {
+  id        Int     @id @default(autoincrement())
+  chave     String  @unique
+  descricao String?
+
+  perfis PerfilPermissao[]
+}
+
+model PerfilPermissao {
+  id          Int           @id @default(autoincrement())
+  perfil      PerfilUsuario
+  permissaoId Int
+
+  permissao Permissao @relation(fields: [permissaoId], references: [id])
+
+  @@unique([perfil, permissaoId])
+}
+
+model Modulo {
+  id        Int     @id @default(autoincrement())
+  chave     String  @unique
+  nome      String
+  descricao String?
+  ativo     Boolean @default(true)
+  ordem     Int     @default(0)
+
+  condominios CondominioModulo[]
+}
+
+model CondominioModulo {
+  id           Int     @id @default(autoincrement())
+  condominioId Int
+  moduloId     Int
+  ativo        Boolean @default(true)
+
+  condominio Condominio @relation(fields: [condominioId], references: [id])
+  modulo     Modulo     @relation(fields: [moduloId], references: [id])
+
+  @@unique([condominioId, moduloId])
+}
+
+model Integrador {
+  id           Int      @id @default(autoincrement())
+  nome         String
+  slug         String   @unique
+  dominio      String?
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  tema        IntegradorTema?
+  condominios Condominio[]
+}
+
+model IntegradorTema {
+  id           Int @id @default(autoincrement())
+  integradorId Int @unique
+
+  nomeSistema String?
+  logoUrl     String?
+  faviconUrl  String?
+
+  primaryColor     String @default("#2563eb")
+  primarySoftColor String @default("#eff6ff")
+  sidebarColor     String @default("#111827")
+  bgColor          String @default("#f5f7fb")
+  cardColor        String @default("#ffffff")
+  textColor        String @default("#172033")
+  mutedColor       String @default("#64748b")
+  borderColor      String @default("#e5e7eb")
+
+  integrador Integrador @relation(fields: [integradorId], references: [id])
 }

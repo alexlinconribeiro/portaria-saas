@@ -10,5 +10,10 @@ export async function apiFetch(path, options = {}) {
     }
   });
 
+  if (!res.ok) {
+    const erro = await res.json().catch(() => ({}));
+    throw new Error(erro?.erro || "Erro na API");
+  }
+
   return res.json();
 }

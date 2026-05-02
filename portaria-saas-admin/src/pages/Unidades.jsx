@@ -1,3 +1,4 @@
+import Permissao from "../components/Permissao";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../services/api";
 import Dropdown from "../components/Dropdown";
@@ -96,9 +97,11 @@ export default function Unidades() {
       description="Gerencie apartamentos, casas, blocos e torres."
       active="/unidades"
       action={
-        <button className="primary-btn" onClick={abrirNovo}>
-          + Adicionar unidade
-        </button>
+        <Permissao perm="unidades.criar">
+		<button className="primary-btn" onClick={abrirNovo}>
+			+ Adicionar unidade
+		</button>
+		</Permissao>
       }
     >
       <section className="panel">
@@ -150,9 +153,11 @@ export default function Unidades() {
                     </span>
                   </td>
                   <td>
-                    <button className="table-btn" onClick={() => editar(u)}>
-                      Editar
-                    </button>
+					<Permissao perm="unidades.editar">
+					<button className="table-btn" onClick={() => editar(u)}>
+						Editar
+					</button>
+					</Permissao>
                   </td>
                 </tr>
               ))}
@@ -168,9 +173,11 @@ export default function Unidades() {
         onClose={fecharModal}
         footer={
           <>
-            <button className="primary-btn" onClick={salvar}>
-              {editandoId ? "Salvar alterações" : "Criar unidade"}
-            </button>
+            <Permissao perm={editandoId ? "unidades.editar" : "unidades.criar"}>
+				<button className="primary-btn" onClick={salvar}>
+					{editandoId ? "Salvar alterações" : "Criar unidade"}
+				</button>
+			</Permissao>
 
             <button className="secondary-btn" onClick={fecharModal}>
               Cancelar

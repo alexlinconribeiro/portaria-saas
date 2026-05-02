@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import Integradores from "./pages/Integradores";
+import Modulos from "./pages/Modulos";
 import ProtectedRoute from "./components/ProtectedRoute";
-
 import Portaria from "./pages/Portaria";
 import PortariaFull from "./pages/PortariaFull";
 import Perfil from "./pages/Perfil";
@@ -33,11 +34,26 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-
+	<Route
+  path="/modulos"
+  element={
+    <ProtectedRoute permissao="configuracoes.ver" modulo="configuracoes">
+      <Modulos />
+    </ProtectedRoute>
+  }
+/>
+	<Route
+  path="/integradores"
+  element={
+    <ProtectedRoute permissao="integradores.ver" modulo="integradores">
+      <Integradores />
+    </ProtectedRoute>
+  }
+/>
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute permissao="dashboard.ver">
+            <ProtectedRoute permissao="portaria.ver" modulo="portaria">
               <Dashboard />
             </ProtectedRoute>
           }
@@ -46,7 +62,7 @@ function App() {
         <Route
           path="/portaria"
           element={
-            <ProtectedRoute permissao="portaria.ver">
+            <ProtectedRoute permissao="portaria.ver" modulo="portaria">
               <Portaria />
             </ProtectedRoute>
           }
@@ -55,7 +71,7 @@ function App() {
         <Route
           path="/portaria-full"
           element={
-            <ProtectedRoute permissao="portaria.ver">
+            <ProtectedRoute permissao="portaria.ver" modulo="portaria">
               <PortariaFull />
             </ProtectedRoute>
           }
@@ -64,7 +80,10 @@ function App() {
         <Route
           path="/visitantes"
           element={
-            <ProtectedRoute permissao="visitantes.ver">
+            <ProtectedRoute
+              permissao="visitantes.ver"
+              modulo="gestao_visitantes"
+            >
               <Visitantes />
             </ProtectedRoute>
           }
@@ -73,7 +92,10 @@ function App() {
         <Route
           path="/logs"
           element={
-            <ProtectedRoute permissao="logs.ver">
+            <ProtectedRoute
+              permissao="portaria.visualizar_logs"
+              modulo="portaria"
+            >
               <Logs />
             </ProtectedRoute>
           }
@@ -82,7 +104,7 @@ function App() {
         <Route
           path="/usuarios"
           element={
-            <ProtectedRoute permissao="usuarios.ver">
+            <ProtectedRoute permissao="usuarios.ver" modulo="configuracoes">
               <Usuarios />
             </ProtectedRoute>
           }
@@ -91,7 +113,10 @@ function App() {
         <Route
           path="/unidades"
           element={
-            <ProtectedRoute permissao="unidades.ver">
+            <ProtectedRoute
+              permissao="unidades.ver"
+              modulo="gestao_moradores"
+            >
               <Unidades />
             </ProtectedRoute>
           }
@@ -100,7 +125,10 @@ function App() {
         <Route
           path="/moradores"
           element={
-            <ProtectedRoute permissao="pessoas.ver">
+            <ProtectedRoute
+              permissao="moradores.ver"
+              modulo="gestao_moradores"
+            >
               <Moradores />
             </ProtectedRoute>
           }
@@ -109,7 +137,10 @@ function App() {
         <Route
           path="/pessoas"
           element={
-            <ProtectedRoute permissao="pessoas.ver">
+            <ProtectedRoute
+              permissao="moradores.ver"
+              modulo="gestao_moradores"
+            >
               <Pessoas />
             </ProtectedRoute>
           }
@@ -118,7 +149,7 @@ function App() {
         <Route
           path="/credenciais"
           element={
-            <ProtectedRoute permissao="credenciais.ver">
+            <ProtectedRoute permissao="dispositivos.ver" modulo="dispositivos">
               <Credenciais />
             </ProtectedRoute>
           }
@@ -127,7 +158,7 @@ function App() {
         <Route
           path="/dispositivos"
           element={
-            <ProtectedRoute permissao="dispositivos.ver">
+            <ProtectedRoute permissao="dispositivos.ver" modulo="dispositivos">
               <Dispositivos />
             </ProtectedRoute>
           }
@@ -136,7 +167,7 @@ function App() {
         <Route
           path="/condominios"
           element={
-            <ProtectedRoute permissao="condominios.gerenciar">
+            <ProtectedRoute permissao="condominios.ver" modulo="integradores">
               <Condominios />
             </ProtectedRoute>
           }
@@ -145,7 +176,10 @@ function App() {
         <Route
           path="/configuracoes"
           element={
-            <ProtectedRoute permissao="configuracoes.editar">
+            <ProtectedRoute
+              permissao="configuracoes.ver"
+              modulo="configuracoes"
+            >
               <Configuracoes />
             </ProtectedRoute>
           }

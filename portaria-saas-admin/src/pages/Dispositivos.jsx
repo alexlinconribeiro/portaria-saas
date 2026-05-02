@@ -1,3 +1,5 @@
+
+import Permissao from "../components/Permissao";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../services/api";
 import Layout from "../components/Layout";
@@ -141,9 +143,11 @@ export default function Dispositivos() {
       description="Gerencie leitores faciais, controladoras e equipamentos da portaria."
       active="/dispositivos"
       action={
-        <button className="primary-btn" onClick={abrirNovo}>
-          + Adicionar dispositivo
-        </button>
+        <Permissao perm="dispositivos.criar">
+			<button className="primary-btn" onClick={abrirNovo}>
+				+ Adicionar dispositivo
+			</button>
+		</Permissao>
       }
     >
       <section className="panel">
@@ -212,16 +216,18 @@ export default function Dispositivos() {
                   </td>
 
                   <td>
-                    <button className="table-btn" onClick={() => testar(d.id)}>
-                      Testar
-                    </button>
+                    <Permissao perm="dispositivos.ver">
+						<button className="table-btn">Testar</button>
+					</Permissao>
 
-                    <button
-                      className="table-btn secondary-table-btn"
-                      onClick={() => editar(d)}
-                    >
-                      Editar
-                    </button>
+                    <Permissao perm="dispositivos.editar">
+						<button
+							className="table-btn secondary-table-btn"
+							onClick={() => editar(d)}
+							>
+							Editar
+						</button>
+					</Permissao>
                   </td>
                 </tr>
               ))}
@@ -237,9 +243,11 @@ export default function Dispositivos() {
         onClose={fecharModal}
         footer={
           <>
-            <button className="primary-btn" onClick={salvar}>
-              {editandoId ? "Salvar alterações" : "Salvar dispositivo"}
-            </button>
+            <Permissao perm={editandoId ? "dispositivos.editar" : "dispositivos.criar"}>
+			<button className="primary-btn" onClick={salvar}>
+				{editandoId ? "Salvar alterações" : "Salvar dispositivo"}
+			</button>
+			</Permissao>
 
             <button className="secondary-btn" onClick={fecharModal}>
               Cancelar
