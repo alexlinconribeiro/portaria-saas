@@ -5,6 +5,7 @@ const cors = require("cors");
 const path = require("path");
 const { PrismaClient } = require("@prisma/client");
 
+const acessoRoutes = require("./routes/acesso.routes");
 const integradoresRoutes = require("./routes/integradores.routes");
 const temaRoutes = require("./routes/tema.routes");
 const modulosRoutes = require("./routes/modulos.routes");
@@ -49,6 +50,7 @@ app.use("/perfil", perfilRoutes);
 app.use("/modulos", modulosRoutes);
 app.use("/tema", temaRoutes);
 app.use("/integradores", integradoresRoutes);
+app.use("/acesso", acessoRoutes);
 
 app.get("/protegido", authMiddleware, (req, res) => {
   res.json({
