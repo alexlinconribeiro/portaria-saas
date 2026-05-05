@@ -1866,3 +1866,575 @@ select {
   object-fit: contain;
   border-radius: 8px;
 }
+.portaria-live {
+  min-height: 520px;
+}
+
+.portaria-live-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.portaria-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 440px) 1fr;
+  gap: 22px;
+}
+
+.portaria-reader-card,
+.portaria-result-card {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 22px;
+  padding: 26px;
+}
+
+.reader-icon,
+.result-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: var(--primary-soft);
+  font-size: 34px;
+  margin-bottom: 20px;
+}
+
+.portaria-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.portaria-result-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 360px;
+}
+
+.portaria-result-card h2 {
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+.portaria-result-card p {
+  color: var(--muted);
+}
+
+.portaria-result-card.authorized {
+  border-color: rgba(22, 163, 74, 0.35);
+}
+
+.portaria-result-card.denied {
+  border-color: rgba(220, 38, 38, 0.35);
+}
+
+.result-details {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.result-details strong {
+  font-size: 22px;
+  color: var(--text);
+}
+
+.result-details span,
+.result-details small {
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .portaria-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .portaria-live-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+.portaria-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.portaria-tabs button {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.portaria-tabs button.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.portaria-live {
+  min-height: 520px;
+}
+
+.portaria-live-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.portaria-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 440px) 1fr;
+  gap: 22px;
+}
+
+.portaria-reader-card,
+.portaria-result-card {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 22px;
+  padding: 26px;
+}
+
+.reader-icon,
+.result-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: var(--primary-soft);
+  font-size: 34px;
+  margin-bottom: 20px;
+}
+
+.portaria-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.portaria-result-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 360px;
+}
+
+.portaria-result-card h2 {
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+.portaria-result-card p {
+  color: var(--muted);
+}
+
+.portaria-result-card.authorized {
+  border-color: rgba(22, 163, 74, 0.35);
+}
+
+.portaria-result-card.denied {
+  border-color: rgba(220, 38, 38, 0.35);
+}
+
+.result-details {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.result-details strong {
+  font-size: 22px;
+  color: var(--text);
+}
+
+.result-details span,
+.result-details small {
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .portaria-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .portaria-live-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+.wpp-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.wpp-modal-card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.wpp-modal-card textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--bg);
+  color: var(--text);
+}
+/* =========================
+   ENCOMENDAS
+========================= */
+
+.encomendas-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.encomendas-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.encomenda-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+
+.encomenda-panel h2 {
+  margin: 0 0 18px;
+  color: var(--text);
+}
+
+.encomenda-row-single {
+  margin-bottom: 16px;
+}
+
+.encomenda-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 16px;
+  align-items: end;
+}
+
+.encomenda-form input,
+.retirada-form input {
+  width: 100%;
+  height: 48px;
+  background: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0 14px;
+  outline: none;
+}
+
+.encomenda-form input::placeholder,
+.retirada-form input::placeholder {
+  color: var(--muted);
+}
+
+.encomenda-form input:focus,
+.retirada-form input:focus {
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.encomenda-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.encomenda-actions .primary-btn,
+.encomenda-actions .secondary-btn {
+  width: auto;
+  min-width: 120px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.retirada-panel {
+  min-height: 284px;
+}
+
+.retirada-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.retirada-form .primary-btn {
+  height: 48px;
+  width: auto;
+  min-width: 120px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.encomenda-empty-small {
+  margin-top: 16px;
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.encomenda-feedback {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.encomenda-feedback.ok {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--success);
+  border: 1px solid rgba(22, 163, 74, 0.22);
+}
+
+.encomenda-feedback.erro {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--danger);
+  border: 1px solid rgba(220, 38, 38, 0.22);
+}
+
+.encomenda-validada-card {
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  background: var(--card);
+  display: grid;
+  gap: 6px;
+}
+
+.encomenda-validada-card small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.encomenda-validada-card strong {
+  font-size: 18px;
+  color: var(--primary);
+}
+
+.encomenda-validada-card span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.encomenda-validada-card .primary-btn {
+  margin-top: 10px;
+  width: auto;
+  justify-self: start;
+}
+
+.resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.resumo-item {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--card);
+}
+
+.resumo-item strong {
+  display: block;
+  font-size: 28px;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.resumo-item span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.encomenda-list-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 14px;
+}
+
+.encomenda-search {
+  margin-bottom: 14px;
+}
+
+.encomenda-list {
+  display: grid;
+  gap: 12px;
+}
+
+.encomenda-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  background: var(--card);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.encomenda-card-main {
+  display: grid;
+  gap: 5px;
+}
+
+.encomenda-card-main small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.encomenda-card-main strong {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.encomenda-card-main span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.encomenda-card-side {
+  display: grid;
+  justify-items: end;
+  gap: 12px;
+}
+
+.encomenda-card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.encomenda-card-actions .table-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+}
+
+.encomenda-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.encomenda-modal-card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--modal-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.encomenda-modal-card textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--input-bg);
+  color: var(--text);
+  margin: 14px 0;
+}
+
+@media (max-width: 1100px) {
+  .encomendas-top-grid,
+  .encomenda-list-header,
+  .encomenda-card {
+    grid-template-columns: 1fr;
+  }
+
+  .encomenda-card-side {
+    justify-items: start;
+  }
+
+  .encomenda-card-actions {
+    justify-content: flex-start;
+  }
+
+  .resumo-grid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .encomenda-form,
+  .retirada-form,
+  .resumo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .encomenda-actions .primary-btn,
+  .encomenda-actions .secondary-btn,
+  .retirada-form .primary-btn {
+    width: 100%;
+  }
+}

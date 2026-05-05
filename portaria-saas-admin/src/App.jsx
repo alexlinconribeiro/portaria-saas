@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import Integracoes from "./pages/Integracoes";
 import Integradores from "./pages/Integradores";
 import Modulos from "./pages/Modulos";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -19,6 +20,7 @@ import Logs from "./pages/Logs";
 import Pessoas from "./pages/Pessoas";
 import Credenciais from "./pages/Credenciais";
 import Dispositivos from "./pages/Dispositivos";
+import Encomendas from "./pages/Encomendas";
 
 function App() {
   const [tema, setTema] = useState(() => {
@@ -88,6 +90,25 @@ function App() {
             </ProtectedRoute>
           }
         />
+		<Route
+  path="/encomendas"
+  element={
+    <ProtectedRoute
+      permissao="encomendas.ver"
+      modulo="encomendas"
+    >
+      <Encomendas />
+    </ProtectedRoute>
+  }
+/>
+		<Route
+			path="/integracoes"
+			element={
+			<ProtectedRoute>
+			<Integracoes />
+			</ProtectedRoute>
+			}
+		/>
 
         <Route
           path="/logs"

@@ -4,6 +4,7 @@ const { PrismaClient } = require("@prisma/client");
 
 const authMiddleware = require("../middlewares/auth.middleware");
 const permitirPerfis = require("../middlewares/perfil.middleware");
+const { validarModulo } = require("../middlewares/modulo.middleware");
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -43,33 +44,38 @@ function testarConexao(ip, porta = 80, timeout = 2500) {
 }
 
 // LISTAR
-router.get("/", async (req, res) => {
-  try {
-    const where = {};
+router.get(
+  "/",
+  validarModulo("dispositivos"),
+  async (req, res) => {
+    try {
+      const where = {};
 
-    if (req.usuario.perfil === "SUPER_ADMIN") {
-      if (req.query.condominioId) {
-        where.condominioId = Number(req.query.condominioId);
+      if (req.usuario.perfil === "SUPER_ADMIN") {
+        if (req.query.condominioId) {
+          where.condominioId = Number(req.query.condominioId);
+        }
+      } else {
+        where.condominioId = Number(req.usuario.condominioId);
       }
-    } else {
-      where.condominioId = Number(req.usuario.condominioId);
+
+      const dispositivos = await prisma.dispositivo.findMany({
+        where,
+        orderBy: { id: "desc" }
+      });
+
+      res.json(dispositivos);
+    } catch (erro) {
+      console.error("Erro ao listar dispositivos:", erro);
+      res.status(500).json({ erro: "Erro ao listar dispositivos" });
     }
-
-    const dispositivos = await prisma.dispositivo.findMany({
-      where,
-      orderBy: { id: "desc" }
-    });
-
-    res.json(dispositivos);
-  } catch (erro) {
-    console.error("Erro ao listar dispositivos:", erro);
-    res.status(500).json({ erro: "Erro ao listar dispositivos" });
   }
-});
+);
 
 // CRIAR
 router.post(
   "/",
+  validarModulo("dispositivos"),
   permitirPerfis("SUPER_ADMIN", "ADMIN_CONDOMINIO", "TECNICO"),
   async (req, res) => {
     try {
@@ -122,6 +128,7 @@ router.post(
 // EDITAR
 router.put(
   "/:id",
+  validarModulo("dispositivos"),
   permitirPerfis("SUPER_ADMIN", "ADMIN_CONDOMINIO", "TECNICO"),
   async (req, res) => {
     try {
@@ -182,44 +189,48 @@ router.put(
 );
 
 // TESTAR CONEXÃO
-router.post("/:id/check", async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+router.post(
+  "/:id/check",
+  validarModulo("dispositivos"),
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
 
-    const dispositivo = await prisma.dispositivo.findUnique({
-      where: { id }
-    });
+      const dispositivo = await prisma.dispositivo.findUnique({
+        where: { id }
+      });
 
-    if (!dispositivo) {
-      return res.status(404).json({ erro: "Dispositivo não encontrado" });
-    }
-
-    if (
-      req.usuario.perfil !== "SUPER_ADMIN" &&
-      dispositivo.condominioId !== Number(req.usuario.condominioId)
-    ) {
-      return res.status(403).json({ erro: "Acesso negado" });
-    }
-
-    if (!dispositivo.ip) {
-      return res.status(400).json({ erro: "Dispositivo sem IP configurado" });
-    }
-
-    const online = await testarConexao(dispositivo.ip, dispositivo.porta || 80);
-
-    const atualizado = await prisma.dispositivo.update({
-      where: { id },
-      data: {
-        status: online ? "ONLINE" : "OFFLINE",
-        ultimoCheck: new Date()
+      if (!dispositivo) {
+        return res.status(404).json({ erro: "Dispositivo não encontrado" });
       }
-    });
 
-    res.json(atualizado);
-  } catch (erro) {
-    console.error("Erro ao testar dispositivo:", erro);
-    res.status(500).json({ erro: "Erro ao testar dispositivo" });
+      if (
+        req.usuario.perfil !== "SUPER_ADMIN" &&
+        dispositivo.condominioId !== Number(req.usuario.condominioId)
+      ) {
+        return res.status(403).json({ erro: "Acesso negado" });
+      }
+
+      if (!dispositivo.ip) {
+        return res.status(400).json({ erro: "Dispositivo sem IP configurado" });
+      }
+
+      const online = await testarConexao(dispositivo.ip, dispositivo.porta || 80);
+
+      const atualizado = await prisma.dispositivo.update({
+        where: { id },
+        data: {
+          status: online ? "ONLINE" : "OFFLINE",
+          ultimoCheck: new Date()
+        }
+      });
+
+      res.json(atualizado);
+    } catch (erro) {
+      console.error("Erro ao testar dispositivo:", erro);
+      res.status(500).json({ erro: "Erro ao testar dispositivo" });
+    }
   }
-});
+);
 
 module.exports = router;

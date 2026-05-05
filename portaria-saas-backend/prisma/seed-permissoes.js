@@ -70,53 +70,57 @@ const permissoes = [
   "unidades.ver",
   "unidades.criar",
   "unidades.editar",
-  "unidades.excluir"
+  "unidades.excluir",
+  
+  
+  "whatsapp_config.ver",
+ "whatsapp_config.editar",
 ];
 
 const permissoesPorPerfil = {
   SUPER_ADMIN: permissoes,
 
-  ADMIN_CONDOMINIO: [
-    "moradores.ver",
-    "moradores.criar",
-    "moradores.editar",
-    "moradores.excluir",
+	  ADMIN_CONDOMINIO: [
+		"moradores.ver",
+		"moradores.criar",
+		"moradores.editar",
+		"moradores.excluir",
 
-    "visitantes.ver",
-    "visitantes.criar",
-    "visitantes.autorizar",
-    "visitantes.negar",
-    "visitantes.historico",
+		"visitantes.ver",
+		"visitantes.criar",
+		"visitantes.autorizar",
+		"visitantes.negar",
+		"visitantes.historico",
 
-    "portaria.ver",
-    "portaria.visualizar_logs",
+		"portaria.ver",
+		"portaria.visualizar_logs",
 
-    "encomendas.ver",
-    "encomendas.registrar",
-    "encomendas.editar",
-    "encomendas.excluir",
-    "encomendas.notificar_morador",
-    "encomendas.entregar",
-    "encomendas.historico",
+		"encomendas.ver",
+		"encomendas.registrar",
+		"encomendas.editar",
+		"encomendas.excluir",
+		"encomendas.notificar_morador",
+		"encomendas.entregar",
+		"encomendas.historico",
 
-    "dispositivos.ver",
+		"dispositivos.ver",
 
-    "relatorios.ver",
-    "relatorios.exportar",
+		"relatorios.ver",
+		"relatorios.exportar",
 
-    "configuracoes.ver",
-    "configuracoes.editar",
+		"configuracoes.ver",
+		"configuracoes.editar",
 
-    "usuarios.ver",
-    "usuarios.criar",
-    "usuarios.editar",
-    "usuarios.excluir",
+		"usuarios.ver",
+		"usuarios.criar",
+		"usuarios.editar",
+		"usuarios.excluir",
 
-    "unidades.ver",
-    "unidades.criar",
-    "unidades.editar",
-    "unidades.excluir"
-  ],
+		"unidades.ver",
+		"unidades.criar",
+		"unidades.editar",
+		"unidades.excluir"
+	  ],
 
   PORTARIA: [
     "visitantes.ver",

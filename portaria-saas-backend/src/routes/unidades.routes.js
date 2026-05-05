@@ -3,6 +3,7 @@ const { PrismaClient } = require("@prisma/client");
 
 const authMiddleware = require("../middlewares/auth.middleware");
 const { validarPermissao } = require("../middlewares/permissao.middleware");
+const { validarModulo } = require("../middlewares/modulo.middleware");
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -20,6 +21,7 @@ function getCondominioId(req) {
 // LISTAR
 router.get(
   "/",
+  validarModulo("gestao_moradores"),
   validarPermissao("unidades.ver"),
   async (req, res) => {
     try {
@@ -48,11 +50,18 @@ router.get(
 // CRIAR
 router.post(
   "/",
+  validarModulo("gestao_moradores"),
   validarPermissao("unidades.criar"),
   async (req, res) => {
     try {
       const condominioId = Number(getCondominioId(req));
       const { bloco, identificacao } = req.body;
+
+      if (!condominioId || !identificacao) {
+        return res.status(400).json({
+          erro: "condominioId e identificacao são obrigatórios"
+        });
+      }
 
       const unidade = await prisma.unidade.create({
         data: {
@@ -73,6 +82,7 @@ router.post(
 // EDITAR
 router.put(
   "/:id",
+  validarModulo("gestao_moradores"),
   validarPermissao("unidades.editar"),
   async (req, res) => {
     try {
@@ -88,7 +98,7 @@ router.put(
 
       if (
         req.usuario.perfil !== "SUPER_ADMIN" &&
-        unidadeAtual.condominioId !== req.usuario.condominioId
+        unidadeAtual.condominioId !== Number(req.usuario.condominioId)
       ) {
         return res.status(403).json({ erro: "Acesso negado" });
       }

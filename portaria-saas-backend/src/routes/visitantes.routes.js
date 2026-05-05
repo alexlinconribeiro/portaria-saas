@@ -3,6 +3,7 @@ const { PrismaClient } = require("@prisma/client");
 
 const authMiddleware = require("../middlewares/auth.middleware");
 const { validarPermissao } = require("../middlewares/permissao.middleware");
+const { validarModulo } = require("../middlewares/modulo.middleware");
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -12,6 +13,7 @@ router.use(authMiddleware);
 // LISTAR VISITANTES
 router.get(
   "/",
+  validarModulo("gestao_visitantes"),
   validarPermissao("visitantes.ver"),
   async (req, res) => {
     try {
@@ -51,6 +53,7 @@ router.get(
 // CRIAR VISITA
 router.post(
   "/",
+  validarModulo("gestao_visitantes"),
   validarPermissao("visitantes.criar"),
   async (req, res) => {
     try {
@@ -104,6 +107,7 @@ router.post(
 // AUTORIZAR
 router.patch(
   "/:id/autorizar",
+  validarModulo("gestao_visitantes"),
   validarPermissao("visitantes.autorizar"),
   async (req, res) => {
     try {
@@ -145,6 +149,7 @@ router.patch(
 // NEGAR
 router.patch(
   "/:id/negar",
+  validarModulo("gestao_visitantes"),
   validarPermissao("visitantes.negar"),
   async (req, res) => {
     try {
@@ -186,6 +191,7 @@ router.patch(
 // REGISTRAR ENTRADA
 router.patch(
   "/:id/entrada",
+  validarModulo("gestao_visitantes"),
   validarPermissao("visitantes.autorizar"),
   async (req, res) => {
     try {
@@ -247,6 +253,7 @@ router.patch(
 // REGISTRAR SAÍDA
 router.patch(
   "/:id/saida",
+  validarModulo("gestao_visitantes"),
   validarPermissao("visitantes.autorizar"),
   async (req, res) => {
     try {
@@ -286,6 +293,7 @@ router.patch(
 // CANCELAR
 router.patch(
   "/:id/cancelar",
+  validarModulo("gestao_visitantes"),
   validarPermissao("visitantes.negar"),
   async (req, res) => {
     try {

@@ -15,7 +15,7 @@ import {
   ChevronDown,
   ChevronRight
 } from "lucide-react";
-
+import { PlugZap } from "lucide-react";
 import { usuarioTemPermissao, temModulo, getPerfil } from "../utils/auth";
 import { getTemaSistema } from "../utils/themeLoader";
 
@@ -45,6 +45,13 @@ const gruposMenu = [
         permissao: "visitantes.ver",
         modulo: "gestao_visitantes"
       },
+	  {
+		label: "Encomendas",
+		href: "/encomendas",
+		icon: Boxes,
+		permissao: "encomendas.ver",
+		modulo: "encomendas"
+	},
       {
         label: "Logs de Acesso",
         href: "/logs",
@@ -139,7 +146,13 @@ const gruposMenu = [
         icon: Settings,
         permissao: "configuracoes.ver",
         modulo: "configuracoes"
-      }
+      },
+	  {
+		label: "Integrações",
+		href: "/integracoes",
+		icon: PlugZap,
+		perfil: "SUPER_ADMIN"
+	  }
     ]
   }
 ];

@@ -79,6 +79,76 @@ enum TemaUsuario {
   CLARO
 }
 
+enum StatusEncomenda {
+  PENDENTE
+  NOTIFICADO
+  RETIRADO
+  CANCELADO
+}
+
+enum ModoEnvioWhatsapp {
+  MANUAL
+  AUTOMATICO
+}
+
+model IntegradorWhatsappConfig {
+  id Int @id @default(autoincrement())
+
+  integradorId Int @unique
+
+  modo  ModoEnvioWhatsapp @default(MANUAL)
+  ativo Boolean           @default(false)
+
+  phoneNumberId String?
+  accessToken   String?
+
+  templateEncomenda String? @default("encomenda_recebida")
+  templateIdioma    String? @default("pt_BR")
+
+  fallbackManual Boolean @default(true)
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  integrador Integrador @relation(fields: [integradorId], references: [id])
+}
+
+model Encomenda {
+  id           Int  @id @default(autoincrement())
+  condominioId Int
+  unidadeId    Int?
+  pessoaId     Int?
+
+  descricao String?
+  codigo    String?
+  remetente String?
+
+  status StatusEncomenda @default(PENDENTE)
+
+  dataRecebimento DateTime  @default(now())
+  notificadoEm    DateTime?
+  retiradoEm      DateTime?
+  canceladoEm     DateTime?
+
+  recebidoPorId Int?
+  retiradoPorId Int?
+
+  observacao     String?
+  codigoRetirada String?
+  codigoExpiraEm DateTime?
+
+  mensagemWhatsapp String?
+  whatsappEnviado  Boolean @default(false)
+  whatsappErro     String?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  condominio Condominio @relation(fields: [condominioId], references: [id])
+  unidade    Unidade?   @relation(fields: [unidadeId], references: [id])
+  pessoa     Pessoa?    @relation(fields: [pessoaId], references: [id])
+}
+
 model Pessoa {
   id             Int        @id @default(autoincrement())
   condominioId   Int
@@ -104,6 +174,7 @@ model Pessoa {
   acessos                      EventoAcesso[]
   visitasResponsavel           Visita[]           @relation("PessoaResponsavelVisita")
   visitasAutorizadasComoPessoa Visita[]           @relation("PessoaAutorizouVisita")
+  encomendas                   Encomenda[]
 }
 
 model PessoaUnidade {
@@ -165,6 +236,7 @@ model Condominio {
   credenciais       CredencialAcesso[]
   empresasTerceiras EmpresaTerceira[]
   configuracao      Configuracao?
+  encomendas        Encomenda[]
 }
 
 model Usuario {
@@ -193,6 +265,7 @@ model Unidade {
   moradores  Morador[]
   pessoas    PessoaUnidade[]
   visitas    Visita[]
+  encomendas Encomenda[]
 }
 
 model Morador {
@@ -393,8 +466,9 @@ model Integrador {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  tema        IntegradorTema?
-  condominios Condominio[]
+  tema           IntegradorTema?
+  condominios    Condominio[]
+  whatsappConfig IntegradorWhatsappConfig?
 }
 
 model IntegradorTema {

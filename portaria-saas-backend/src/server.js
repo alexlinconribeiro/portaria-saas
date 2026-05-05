@@ -5,6 +5,8 @@ const cors = require("cors");
 const path = require("path");
 const { PrismaClient } = require("@prisma/client");
 
+const whatsappRoutes = require("./routes/whatsapp-config.routes");
+const encomendasRoutes = require("./routes/encomendas.routes");
 const acessoRoutes = require("./routes/acesso.routes");
 const integradoresRoutes = require("./routes/integradores.routes");
 const temaRoutes = require("./routes/tema.routes");
@@ -51,6 +53,9 @@ app.use("/modulos", modulosRoutes);
 app.use("/tema", temaRoutes);
 app.use("/integradores", integradoresRoutes);
 app.use("/acesso", acessoRoutes);
+app.use("/encomendas", encomendasRoutes);
+app.use("/whatsapp-config", whatsappRoutes);
+
 
 app.get("/protegido", authMiddleware, (req, res) => {
   res.json({
