@@ -1,116 +1,161 @@
-function whatsappAutomaticoConfigurado(config) {
+function limparTelefone(numero) {
+  if (!numero) return null;
+  const limpo = String(numero).replace(/\D/g, "");
+  if (!limpo) return null;
+  return limpo.startsWith("55") ? limpo : `55${limpo}`;
+}
+
+function configAtiva(config) {
   return (
     config &&
     config.ativo === true &&
     config.modo === "AUTOMATICO" &&
     config.phoneNumberId &&
-    config.accessToken &&
-    config.templateEncomenda
+    config.accessToken
   );
 }
 
-function limparTelefone(numero) {
-  if (!numero) return null;
+const TEMPLATES = {
+  ENCOMENDA_RECEBIDA: {
+    campo: "templateEncomenda",
+    fallback: "encomenda_recebida"
+  },
+  VISITANTE_AGUARDANDO: {
+    campo: "templateVisitante",
+    fallback: "visitante_aguardando"
+  },
+  ACESSO_LIBERADO: {
+    campo: "templateAcesso",
+    fallback: "acesso_liberado"
+  }
+};
 
-  const limpo = String(numero).replace(/\D/g, "");
+function gerarMensagemManual(tipo, dados) {
+  if (tipo === "ENCOMENDA_RECEBIDA") {
+    return `📦 Você recebeu uma encomenda na portaria.
 
-  if (!limpo) return null;
+Unidade: ${dados.unidade}
+Código de retirada: ${dados.codigoRetirada}
 
-  if (limpo.startsWith("55")) return limpo;
+Apresente este código para retirar.`;
+  }
 
-  return `55${limpo}`;
+  if (tipo === "VISITANTE_AGUARDANDO") {
+    return `🚪 Visitante aguardando autorização.
+
+Unidade: ${dados.unidade}
+Visitante: ${dados.nomeVisitante}
+
+A portaria aguarda sua confirmação.`;
+  }
+
+  if (tipo === "ACESSO_LIBERADO") {
+    return `✅ Acesso liberado.
+
+Pessoa: ${dados.nome}
+Unidade: ${dados.unidade}`;
+  }
+
+  return "Mensagem do sistema.";
 }
 
-function gerarMensagemManual({ unidade, descricao, codigo }) {
-  return `📦 Você recebeu uma encomenda!
-
-Unidade: ${unidade}
-Descrição: ${descricao || "Encomenda"}
-
-🔐 Código de retirada: ${codigo}
-
-Apresente este código na portaria para retirar.`;
-}
-
-async function enviarTemplateEncomenda({ config, telefone, unidade, descricao, codigo }) {
+async function enviarWhatsapp({ config, telefone, tipo, parametros, dadosManual }) {
   const numero = limparTelefone(telefone);
+  const mensagemManual = gerarMensagemManual(tipo, dadosManual || {});
 
   if (!numero) {
     return {
       enviado: false,
-      manual: true,
-      erro: "Telefone inválido"
+      modoManual: true,
+      erro: "Telefone inválido",
+      mensagemManual
     };
   }
 
-  if (!whatsappAutomaticoConfigurado(config)) {
+  if (!configAtiva(config)) {
     return {
       enviado: false,
-      manual: true,
-      erro: "WhatsApp automático não configurado"
+      modoManual: true,
+      erro: "WhatsApp automático não configurado",
+      mensagemManual
     };
   }
 
+  const templateInfo = TEMPLATES[tipo];
+
+  if (!templateInfo) {
+    return {
+      enviado: false,
+      modoManual: true,
+      erro: "Tipo de template inválido",
+      mensagemManual
+    };
+  }
+
+  const templateName =
+    config[templateInfo.campo] || templateInfo.fallback;
+
   try {
-    const url = `https://graph.facebook.com/v20.0/${config.phoneNumberId}/messages`;
+    const resposta = await fetch(
+      `https://graph.facebook.com/v20.0/${config.phoneNumberId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: numero,
+          type: "template",
+          template: {
+            name: templateName,
+            language: {
+              code: config.templateIdioma || "pt_BR"
+            },
+            components: [
+              {
+                type: "body",
+                parameters: parametros.map((texto) => ({
+                  type: "text",
+                  text: String(texto || "-")
+                }))
+              }
+            ]
+          }
+        })
+      }
+    );
 
-    const resposta = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${config.accessToken}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: numero,
-        type: "template",
-        template: {
-          name: config.templateEncomenda || "encomenda_recebida",
-          language: {
-            code: config.templateIdioma || "pt_BR"
-          },
-          components: [
-            {
-              type: "body",
-              parameters: [
-                { type: "text", text: unidade },
-                { type: "text", text: descricao || "Encomenda" },
-                { type: "text", text: codigo }
-              ]
-            }
-          ]
-        }
-      })
-    });
-
-    const dados = await resposta.json();
+    const retorno = await resposta.json();
 
     if (!resposta.ok) {
       return {
         enviado: false,
-        manual: true,
-        erro: dados?.error?.message || "Erro ao enviar WhatsApp",
-        detalhe: dados
+        modoManual: true,
+        erro: retorno?.error?.message || "Erro ao enviar WhatsApp",
+        detalhe: retorno,
+        mensagemManual
       };
     }
 
     return {
       enviado: true,
-      manual: false,
-      dados
+      modoManual: false,
+      retorno
     };
   } catch (erro) {
     return {
       enviado: false,
-      manual: true,
-      erro: erro.message
+      modoManual: true,
+      erro: erro.message,
+      mensagemManual
     };
   }
 }
 
 module.exports = {
-  whatsappAutomaticoConfigurado,
-  limparTelefone,
+  enviarWhatsapp,
   gerarMensagemManual,
-  enviarTemplateEncomenda
+  limparTelefone
 };

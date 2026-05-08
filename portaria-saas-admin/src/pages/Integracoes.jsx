@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { PlugZap, Save, Power, RefreshCw } from "lucide-react";
+import {
+  PlugZap,
+  Save,
+  Power,
+  RefreshCw,
+  MessageCircle
+} from "lucide-react";
 
 import Layout from "../components/Layout";
 import Dropdown from "../components/Dropdown";
@@ -8,12 +14,19 @@ import { getUsuarioToken } from "../utils/auth";
 
 const formInicial = {
   integradorId: "",
+
   modo: "MANUAL",
   ativo: false,
+
   phoneNumberId: "",
   accessToken: "",
+
   templateEncomenda: "encomenda_recebida",
+  templateVisitante: "visitante_aguardando",
+  templateAcesso: "acesso_liberado",
+
   templateIdioma: "pt_BR",
+
   fallbackManual: true
 };
 
@@ -22,7 +35,9 @@ export default function Integracoes() {
   const isSuperAdmin = usuario?.perfil === "SUPER_ADMIN";
 
   const [integradores, setIntegradores] = useState([]);
+
   const [form, setForm] = useState(formInicial);
+
   const [carregando, setCarregando] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
@@ -40,11 +55,14 @@ export default function Integracoes() {
       const dados = await apiFetch("/integradores");
 
       const lista = Array.isArray(dados) ? dados : [];
+
       setIntegradores(lista);
 
       if (lista.length > 0 && !form.integradorId) {
         const primeiroId = String(lista[0].id);
+
         atualizar("integradorId", primeiroId);
+
         await carregarConfig(primeiroId);
       }
     } catch (erro) {
@@ -59,29 +77,56 @@ export default function Integracoes() {
     if (!integradorId) return;
 
     try {
-      const config = await apiFetch(`/whatsapp-config/${integradorId}`);
+      const config = await apiFetch(
+        `/whatsapp-config/${integradorId}`
+      );
 
       if (!config) {
         setForm({
           ...formInicial,
           integradorId: String(integradorId)
         });
+
         return;
       }
 
       setForm({
         integradorId: String(integradorId),
+
         modo: config.modo || "MANUAL",
         ativo: Boolean(config.ativo),
+
         phoneNumberId: config.phoneNumberId || "",
         accessToken: config.accessToken || "",
-        templateEncomenda: config.templateEncomenda || "encomenda_recebida",
-        templateIdioma: config.templateIdioma || "pt_BR",
-        fallbackManual: config.fallbackManual ?? true
+
+        templateEncomenda:
+          config.templateEncomenda ||
+          "encomenda_recebida",
+
+        templateVisitante:
+          config.templateVisitante ||
+          "visitante_aguardando",
+
+        templateAcesso:
+          config.templateAcesso ||
+          "acesso_liberado",
+
+        templateIdioma:
+          config.templateIdioma || "pt_BR",
+
+        fallbackManual:
+          config.fallbackManual ?? true
       });
     } catch (erro) {
-      console.error("Erro ao carregar configuração:", erro);
-      alert("Erro ao carregar configuração do WhatsApp.");
+      console.error(
+        "Erro ao carregar configuração:",
+        erro
+      );
+
+      alert(
+        erro.message ||
+          "Erro ao carregar configuração."
+      );
     }
   }
 
@@ -94,8 +139,14 @@ export default function Integracoes() {
     }
 
     if (form.modo === "AUTOMATICO") {
-      if (!form.phoneNumberId || !form.accessToken || !form.templateEncomenda) {
-        alert("Para usar envio automático, informe Phone Number ID, Access Token e Template.");
+      if (
+        !form.phoneNumberId ||
+        !form.accessToken
+      ) {
+        alert(
+          "Preencha Phone Number ID e Access Token."
+        );
+
         return;
       }
     }
@@ -103,24 +154,52 @@ export default function Integracoes() {
     try {
       setSalvando(true);
 
-      await apiFetch(`/whatsapp-config/${form.integradorId}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          modo: form.modo,
-          ativo: form.ativo,
-          phoneNumberId: form.phoneNumberId || null,
-          accessToken: form.accessToken || null,
-          templateEncomenda: form.templateEncomenda || "encomenda_recebida",
-          templateIdioma: form.templateIdioma || "pt_BR",
-          fallbackManual: form.fallbackManual
-        })
-      });
+      await apiFetch(
+        `/whatsapp-config/${form.integradorId}`,
+        {
+          method: "PUT",
+
+          body: JSON.stringify({
+            modo: form.modo,
+            ativo: form.ativo,
+
+            phoneNumberId:
+              form.phoneNumberId || null,
+
+            accessToken:
+              form.accessToken || null,
+
+            templateEncomenda:
+              form.templateEncomenda,
+
+            templateVisitante:
+              form.templateVisitante,
+
+            templateAcesso:
+              form.templateAcesso,
+
+            templateIdioma:
+              form.templateIdioma,
+
+            fallbackManual:
+              form.fallbackManual
+          })
+        }
+      );
 
       alert("Configuração salva com sucesso.");
+
       await carregarConfig(form.integradorId);
     } catch (erro) {
-      console.error("Erro ao salvar configuração:", erro);
-      alert(erro.message || "Erro ao salvar configuração.");
+      console.error(
+        "Erro ao salvar configuração:",
+        erro
+      );
+
+      alert(
+        erro.message ||
+          "Erro ao salvar configuração."
+      );
     } finally {
       setSalvando(false);
     }
@@ -132,34 +211,54 @@ export default function Integracoes() {
       return;
     }
 
-    if (!window.confirm("Desativar envio automático do WhatsApp para este integrador?")) {
+    if (
+      !window.confirm(
+        "Desativar integração do WhatsApp?"
+      )
+    ) {
       return;
     }
 
     try {
-      await apiFetch(`/whatsapp-config/${form.integradorId}/desativar`, {
-        method: "PATCH"
-      });
+      await apiFetch(
+        `/whatsapp-config/${form.integradorId}/desativar`,
+        {
+          method: "PATCH"
+        }
+      );
 
-      alert("WhatsApp desativado.");
+      alert("Integração desativada.");
+
       await carregarConfig(form.integradorId);
     } catch (erro) {
-      console.error("Erro ao desativar WhatsApp:", erro);
-      alert(erro.message || "Erro ao desativar WhatsApp.");
+      console.error(
+        "Erro ao desativar integração:",
+        erro
+      );
+
+      alert(
+        erro.message ||
+          "Erro ao desativar integração."
+      );
     }
   }
 
   useEffect(() => {
     carregarIntegradores();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // eslint-disable-next-line
   }, []);
 
   if (!isSuperAdmin) {
     return (
-      <Layout title="Integrações" active="/integracoes">
+      <Layout
+        title="Integrações"
+        active="/integracoes"
+      >
         <section className="panel">
           <div className="empty">
-            Apenas SUPER_ADMIN pode acessar as configurações de integrações.
+            Apenas SUPER_ADMIN pode acessar
+            integrações.
           </div>
         </section>
       </Layout>
@@ -169,38 +268,52 @@ export default function Integracoes() {
   return (
     <Layout
       title="Integrações"
-      description="Configure integrações externas do sistema."
+      description="Configurações de integrações externas."
       active="/integracoes"
     >
       <section className="panel">
         <div className="portaria-live-header">
           <div>
-            <h2>WhatsApp Oficial</h2>
+            <h2>
+              <MessageCircle size={20} />
+              WhatsApp Cloud API
+            </h2>
+
             <p className="muted-text">
-              Configure o envio automático de notificações via WhatsApp Cloud API por integrador.
+              Configure envio automático por
+              integrador.
             </p>
           </div>
 
           <button
             className="secondary-btn"
             type="button"
-            onClick={() => carregarConfig(form.integradorId)}
-            disabled={carregando || !form.integradorId}
+            onClick={() =>
+              carregarConfig(form.integradorId)
+            }
           >
             <RefreshCw size={16} />
             Atualizar
           </button>
         </div>
 
-        <form className="form-grid" onSubmit={salvar}>
+        <form
+          className="form-grid"
+          onSubmit={salvar}
+        >
           <label className="field field-full">
             <span>Integrador</span>
+
             <Dropdown
               searchable
-              placeholder="Selecione o integrador"
+              placeholder="Selecione"
               value={form.integradorId}
               onChange={(valor) => {
-                atualizar("integradorId", valor);
+                atualizar(
+                  "integradorId",
+                  valor
+                );
+
                 carregarConfig(valor);
               }}
               options={integradores.map((i) => ({
@@ -211,96 +324,194 @@ export default function Integracoes() {
           </label>
 
           <label className="field">
-            <span>Modo de envio</span>
+            <span>Modo</span>
+
             <select
               value={form.modo}
-              onChange={(e) => atualizar("modo", e.target.value)}
+              onChange={(e) =>
+                atualizar(
+                  "modo",
+                  e.target.value
+                )
+              }
             >
-              <option value="MANUAL">Manual - copiar mensagem</option>
-              <option value="AUTOMATICO">Automático - WhatsApp Cloud API</option>
+              <option value="MANUAL">
+                Manual
+              </option>
+
+              <option value="AUTOMATICO">
+                Automático
+              </option>
             </select>
           </label>
 
           <label className="field">
-            <span>Status da integração</span>
+            <span>Status</span>
+
             <button
               type="button"
-              className={`theme-switch ${form.ativo ? "active" : ""}`}
-              onClick={() => atualizar("ativo", !form.ativo)}
+              className={`theme-switch ${
+                form.ativo ? "active" : ""
+              }`}
+              onClick={() =>
+                atualizar(
+                  "ativo",
+                  !form.ativo
+                )
+              }
             >
               <span className="switch-track">
                 <span className="switch-thumb" />
               </span>
-              {form.ativo ? "Ativo" : "Inativo"}
+
+              {form.ativo
+                ? "Ativo"
+                : "Inativo"}
             </button>
           </label>
 
           <label className="field">
             <span>Fallback manual</span>
+
             <button
               type="button"
-              className={`theme-switch ${form.fallbackManual ? "active" : ""}`}
-              onClick={() => atualizar("fallbackManual", !form.fallbackManual)}
+              className={`theme-switch ${
+                form.fallbackManual
+                  ? "active"
+                  : ""
+              }`}
+              onClick={() =>
+                atualizar(
+                  "fallbackManual",
+                  !form.fallbackManual
+                )
+              }
             >
               <span className="switch-track">
                 <span className="switch-thumb" />
               </span>
-              {form.fallbackManual ? "Ligado" : "Desligado"}
+
+              {form.fallbackManual
+                ? "Ligado"
+                : "Desligado"}
             </button>
           </label>
 
           <label className="field">
             <span>Phone Number ID</span>
+
             <input
               value={form.phoneNumberId}
-              onChange={(e) => atualizar("phoneNumberId", e.target.value)}
-              placeholder="Ex: 123456789012345"
+              onChange={(e) =>
+                atualizar(
+                  "phoneNumberId",
+                  e.target.value
+                )
+              }
+              placeholder="123456789"
             />
           </label>
 
           <label className="field field-full">
             <span>Access Token</span>
+
             <input
               type="password"
               value={form.accessToken}
-              onChange={(e) => atualizar("accessToken", e.target.value)}
-              placeholder="Token da Meta WhatsApp Cloud API"
+              onChange={(e) =>
+                atualizar(
+                  "accessToken",
+                  e.target.value
+                )
+              }
+              placeholder="Token da API"
             />
           </label>
 
           <label className="field">
-            <span>Template de encomenda</span>
+            <span>
+              Template encomenda
+            </span>
+
             <input
               value={form.templateEncomenda}
-              onChange={(e) => atualizar("templateEncomenda", e.target.value)}
+              onChange={(e) =>
+                atualizar(
+                  "templateEncomenda",
+                  e.target.value
+                )
+              }
               placeholder="encomenda_recebida"
             />
           </label>
 
           <label className="field">
-            <span>Idioma do template</span>
+            <span>
+              Template visitante
+            </span>
+
+            <input
+              value={form.templateVisitante}
+              onChange={(e) =>
+                atualizar(
+                  "templateVisitante",
+                  e.target.value
+                )
+              }
+              placeholder="visitante_aguardando"
+            />
+          </label>
+
+          <label className="field">
+            <span>
+              Template acesso
+            </span>
+
+            <input
+              value={form.templateAcesso}
+              onChange={(e) =>
+                atualizar(
+                  "templateAcesso",
+                  e.target.value
+                )
+              }
+              placeholder="acesso_liberado"
+            />
+          </label>
+
+          <label className="field">
+            <span>Idioma</span>
+
             <input
               value={form.templateIdioma}
-              onChange={(e) => atualizar("templateIdioma", e.target.value)}
+              onChange={(e) =>
+                atualizar(
+                  "templateIdioma",
+                  e.target.value
+                )
+              }
               placeholder="pt_BR"
             />
           </label>
 
-          <div className="field field-full">
-            <div className="soft-links">
-              <span className="muted-text">
-                No modo manual, o sistema gera a mensagem para copiar. No automático, tenta enviar pela API oficial.
-              </span>
-            </div>
-          </div>
-
           <div className="field-full form-actions">
-            <button className="primary-btn" type="submit" disabled={salvando}>
+            <button
+              className="primary-btn"
+              type="submit"
+              disabled={salvando}
+            >
               <Save size={16} />
-              {salvando ? "Salvando..." : "Salvar configuração"}
+
+              {salvando
+                ? "Salvando..."
+                : "Salvar"}
             </button>
 
-            <button className="secondary-btn" type="button" onClick={desativar}>
+            <button
+              className="secondary-btn"
+              type="button"
+              onClick={desativar}
+            >
               <Power size={16} />
               Desativar
             </button>
@@ -309,27 +520,39 @@ export default function Integracoes() {
       </section>
 
       <section className="panel">
-        <h2>Como usar</h2>
+        <h2>Templates recomendados</h2>
 
         <div className="info-list">
           <div className="info-card">
-            <strong>Manual</strong>
+            <strong>
+              encomenda_recebida
+            </strong>
+
             <p>
-              O sistema gera a mensagem da encomenda e o porteiro copia para enviar manualmente no WhatsApp.
+              Notificação de nova
+              encomenda.
             </p>
           </div>
 
           <div className="info-card">
-            <strong>Automático</strong>
+            <strong>
+              visitante_aguardando
+            </strong>
+
             <p>
-              O sistema usa o Phone Number ID, Access Token e template aprovado na Meta para enviar automaticamente.
+              Visitante aguardando
+              autorização.
             </p>
           </div>
 
           <div className="info-card">
-            <strong>Por integrador</strong>
+            <strong>
+              acesso_liberado
+            </strong>
+
             <p>
-              Cada integrador pode ter seu próprio número oficial do WhatsApp. Os condomínios vinculados usam essa configuração.
+              Confirmação de acesso
+              autorizado.
             </p>
           </div>
         </div>

@@ -6,7 +6,7 @@ const { validarPermissao } = require("../middlewares/permissao.middleware");
 const { validarModulo } = require("../middlewares/modulo.middleware");
 const {
   gerarMensagemManual,
-  enviarTemplateEncomenda
+  enviarWhatsapp
 } = require("../services/whatsapp.service");
 
 const router = express.Router();
@@ -131,10 +131,9 @@ router.post(
         }
       });
 
-      const mensagemWhatsapp = gerarMensagemManual({
+      const mensagemWhatsapp = gerarMensagemManual("ENCOMENDA_RECEBIDA", {
         unidade: nomeUnidade(encomenda.unidade),
-        descricao: encomenda.descricao,
-        codigo: encomenda.codigoRetirada
+        codigoRetirada: encomenda.codigoRetirada
       });
 
       const atualizado = await prisma.encomenda.update({
@@ -199,10 +198,9 @@ router.patch(
 
       const unidadeNome = nomeUnidade(encomendaAtual.unidade);
 
-      const mensagemWhatsapp = gerarMensagemManual({
+      const mensagemWhatsapp = gerarMensagemManual("ENCOMENDA_RECEBIDA", {
         unidade: unidadeNome,
-        descricao: encomendaAtual.descricao,
-        codigo: codigoRetirada
+        codigoRetirada
       });
 
       const moradores = await buscarMoradoresDaUnidade(encomendaAtual.unidadeId);
@@ -211,12 +209,19 @@ router.patch(
       const resultados = [];
 
       for (const morador of moradores) {
-        const resultado = await enviarTemplateEncomenda({
+        const resultado = await enviarWhatsapp({
           config,
           telefone: morador.telefone,
-          unidade: unidadeNome,
-          descricao: encomendaAtual.descricao,
-          codigo: codigoRetirada
+          tipo: "ENCOMENDA_RECEBIDA",
+          parametros: [
+            morador.nome,
+            unidadeNome,
+            codigoRetirada
+          ],
+          dadosManual: {
+            unidade: unidadeNome,
+            codigoRetirada
+          }
         });
 
         resultados.push({
@@ -244,7 +249,9 @@ router.patch(
             new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           mensagemWhatsapp,
           whatsappEnviado: algumEnviado,
-          whatsappErro: algumEnviado ? null : erros || "Envio automático não realizado"
+          whatsappErro: algumEnviado
+            ? null
+            : erros || "Envio automático não realizado"
         },
         include: {
           unidade: true

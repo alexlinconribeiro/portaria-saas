@@ -110,7 +110,9 @@ model IntegradorWhatsappConfig {
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 
-  integrador Integrador @relation(fields: [integradorId], references: [id])
+  integrador        Integrador @relation(fields: [integradorId], references: [id])
+  templateVisitante String?    @default("visitante_aguardando")
+  templateAcesso    String?    @default("acesso_liberado")
 }
 
 model Encomenda {
