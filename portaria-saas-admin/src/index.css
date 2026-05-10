@@ -2438,3 +2438,355 @@ select {
     width: 100%;
   }
 }
+/* =========================
+   PORTARIA OPERACIONAL
+========================= */
+
+.operacional-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px) auto;
+  gap: 14px;
+  align-items: center;
+}
+
+.operacional-search {
+  position: relative;
+}
+
+.operacional-search input {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px 0 46px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  outline: none;
+  font-size: 15px;
+}
+
+.operacional-search svg {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+}
+
+.operacional-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.85fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 20px;
+}
+
+.operacional-card h2,
+.operacional-results h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.operacional-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.operacional-actions-grid .primary-btn,
+.operacional-inline-form .primary-btn,
+.operacional-encomenda-form .primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.operacional-inline-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.operacional-inline-form input,
+.operacional-encomenda-form input {
+  width: 100%;
+  height: 48px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  padding: 0 14px;
+  outline: none;
+}
+
+.operacional-confirm-card {
+  margin-top: 14px;
+}
+
+.operacional-confirm-card .primary-btn {
+  margin-top: 12px;
+}
+
+.operacional-empty {
+  margin-top: 14px;
+}
+
+.operacional-encomenda-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.operacional-list {
+  display: grid;
+  gap: 12px;
+}
+
+.operacional-results {
+  margin-top: 20px;
+}
+
+.operacional-mini-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  background: var(--card);
+  display: grid;
+  gap: 4px;
+}
+
+.operacional-mini-card span {
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.operacional-mini-card strong {
+  color: var(--text);
+}
+
+.operacional-mini-card small {
+  color: var(--muted);
+}
+
+.operacional-action-pair {
+  gap: 8px;
+}
+
+.operacional-feed {
+  display: grid;
+  gap: 10px;
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+.operacional-feed-item {
+  border-left: 4px solid var(--primary);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.operacional-feed-item span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.operacional-feed-item strong {
+  color: var(--text);
+}
+
+.operacional-feed-item small {
+  color: var(--muted);
+}
+
+@media (max-width: 1100px) {
+  .operacional-header,
+  .operacional-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .operacional-actions-grid,
+  .operacional-encomenda-form {
+    grid-template-columns: 1fr;
+  }
+}
+/* =========================
+   TOAST OPERACIONAL
+========================= */
+
+.operacional-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 99999;
+  min-width: 280px;
+  max-width: 420px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  box-shadow: var(--shadow);
+  animation: toastIn 0.25s ease;
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+
+.operacional-toast.success {
+  background: rgba(22, 163, 74, 0.14);
+  color: var(--success);
+}
+
+.operacional-toast.error {
+  background: rgba(220, 38, 38, 0.14);
+  color: var(--danger);
+}
+
+.operacional-toast.warning {
+  background: rgba(245, 158, 11, 0.14);
+  color: #f59e0b;
+}
+
+.operacional-toast.info {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+/* =========================
+   MODAL CONFIRMAÇÃO
+========================= */
+
+.confirm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99998;
+  backdrop-filter: blur(6px);
+}
+
+.confirm-modal-card {
+  width: min(420px, 92vw);
+  background: var(--card);
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+  box-shadow: var(--shadow);
+}
+
+.confirm-modal-card h2 {
+  margin: 0;
+  color: var(--text);
+}
+
+.confirm-modal-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+/* =========================
+   FULLSCREEN OPERACIONAL
+========================= */
+
+.layout-operacional-full {
+  padding: 18px !important;
+}
+
+.layout-operacional-full .page-header {
+  display: none !important;
+}
+
+.operacional-top-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.layout-operacional-full .panel {
+  border-radius: 20px;
+}
+
+.layout-operacional-full .operacional-grid {
+  grid-template-columns: 1.15fr .85fr;
+}
+
+.layout-operacional-full .operacional-card {
+  min-height: 100%;
+}
+
+.layout-operacional-full .operacional-feed {
+  max-height: 72vh;
+}
+
+@media (max-width: 1200px) {
+  .layout-operacional-full .operacional-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* =========================
+   OCULTAR MENU NO MODO OPERACIONAL
+========================= */
+
+body.modo-operacional-full .sidebar-mobile-wrap,
+body.modo-operacional-full .sidebar,
+body.modo-operacional-full .mobile-header,
+body.modo-operacional-full .mobile-overlay {
+  display: none !important;
+}
+
+body.modo-operacional-full .app-layout {
+  display: block !important;
+}
+
+body.modo-operacional-full .main {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  padding: 18px !important;
+}
+
+body.modo-operacional-full .topbar {
+  display: none !important;
+}
+
+body.modo-operacional-full .panel {
+  border-radius: 20px;
+}
+
+body.modo-operacional-full .operacional-grid {
+  grid-template-columns: 1.15fr 0.85fr;
+}
+
+body.modo-operacional-full .operacional-feed {
+  max-height: 72vh;
+}
+
+@media (max-width: 1200px) {
+  body.modo-operacional-full .operacional-grid {
+    grid-template-columns: 1fr;
+  }
+}

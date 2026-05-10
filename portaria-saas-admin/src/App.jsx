@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import PortariaOperacional from "./pages/PortariaOperacional";
 import Integracoes from "./pages/Integracoes";
 import Integradores from "./pages/Integradores";
 import Modulos from "./pages/Modulos";
@@ -49,6 +50,14 @@ function App() {
   element={
     <ProtectedRoute permissao="integradores.ver" modulo="integradores">
       <Integradores />
+    </ProtectedRoute>
+  }
+/>
+	<Route
+  path="/portaria-operacional"
+  element={
+    <ProtectedRoute permissao="portaria.ver" modulo="portaria">
+      <PortariaOperacional />
     </ProtectedRoute>
   }
 />

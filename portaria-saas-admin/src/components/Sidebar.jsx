@@ -18,6 +18,7 @@ import {
 import { PlugZap } from "lucide-react";
 import { usuarioTemPermissao, temModulo, getPerfil } from "../utils/auth";
 import { getTemaSistema } from "../utils/themeLoader";
+import { DoorOpen } from "lucide-react";
 
 const gruposMenu = [
   {
@@ -38,6 +39,13 @@ const gruposMenu = [
         permissao: "portaria.ver",
         modulo: "portaria"
       },
+	 {
+		label: "Central Operacional",
+		href: "/portaria-operacional",
+		icon: DoorOpen,
+		permissao: "portaria.ver",
+		modulo: "portaria"
+	 },
       {
         label: "Visitantes",
         href: "/visitantes",
